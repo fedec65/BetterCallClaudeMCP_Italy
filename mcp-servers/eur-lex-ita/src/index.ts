@@ -14,14 +14,17 @@ import { getAttoCelex } from './tools/get-atto-celex.js';
 const tools: Tool[] = [
   {
     name: 'eur-lex-ita:search',
-    description: `Ricerca atti UE in lingua italiana tramite EUR-Lex.
+    description: `Ricerca atti UE in lingua italiana tramite EUR-Lex SPARQL.
 
 Parametri:
-- query (obbligatorio): parole chiave
-- tipoAtto: tipo atto (REGULATION, DIRECTIVE, ecc.)
-- numero: numero atto
-- anno: anno atto
-- materia: materia
+- query: parole chiave nel titolo
+- tipoAtto: tipo atto (REG, DIR, DIR_IMPL, DEC, REC, ANY)
+- numero: numero atto UE
+- anno: anno atto UE
+- celex: codice CELEX esatto
+- dataInizio: data inizio YYYY-MM-DD
+- dataFine: data fine YYYY-MM-DD
+- materia: materia/EuroVoc keyword
 - page / pageSize: paginazione`,
     inputSchema: {
       type: 'object',
@@ -30,11 +33,14 @@ Parametri:
         tipoAtto: { type: 'string' },
         numero: { type: 'string' },
         anno: { type: 'number' },
+        celex: { type: 'string' },
+        dataInizio: { type: 'string' },
+        dataFine: { type: 'string' },
         materia: { type: 'string' },
         page: { type: 'number', minimum: 1 },
         pageSize: { type: 'number', minimum: 1, maximum: 50 },
       },
-      required: ['query'],
+      required: [],
     },
   },
   {

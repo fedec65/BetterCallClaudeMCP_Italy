@@ -11,57 +11,98 @@ const TYPE_MAP: Record<string, string> = {
   REC: 'http://publications.europa.eu/resource/authority/resource-type/REC',
 };
 
+function escapeSparqlString(str: string): string {
+  return str.replace(/["\\]/g, '\\$&');
+}
+
 function buildSparqlQuery(input: SearchEurLexInput): string {
   const limit = input.pageSize ?? 20;
   const offset = ((input.page ?? 1) - 1) * limit;
 
+  const triples: string[] = [];
   const filters: string[] = [];
 
-  if (input.tipoAtto && input.tipoAtto !== 'ANY') {
-    filters.push(`?work cdm:work_has_resource-type <${TYPE_MAP[input.tipoAtto]}> .`);
-  } else {
-    filters.push(`?work cdm:work_has_resource-type ?rtype .`);
-    filters.push(`FILTER (?rtype IN (<http://publications.europa.eu/resource/authority/resource-type/REG>, <http://publications.europa.eu/resource/authority/resource-type/DIR>, <http://publications.europa.eu/resource/authority/resource-type/DIR_IMPL>, <http://publications.europa.eu/resource/authority/resource-type/DEC>, <http://publications.europa.eu/resource/authority/resource-type/REC>))`);
-  }
-
+  // Work and CELEX
   if (input.celex) {
-    filters.push(`?work cdm:resource_legal_id_celex "${input.celex}"^^xsd:string .`);
+    triples.push(`?work cdm:resource_legal_id_celex "${escapeSparqlString(input.celex)}"^^xsd:string .`);
+    triples.push(`BIND("${escapeSparqlString(input.celex)}" AS ?celex)`);
   } else {
-    filters.push(`?work cdm:resource_legal_id_celex ?celex .`);
+    triples.push(`?work cdm:resource_legal_id_celex ?celex .`);
   }
 
-  filters.push(`?work cdm:work_date_document ?date .`);
+  // Resource type
+  if (input.tipoAtto && input.tipoAtto !== 'ANY') {
+    triples.push(`?work cdm:work_has_resource-type <${TYPE_MAP[input.tipoAtto]}> .`);
+  } else if (!input.celex) {
+    triples.push(`?work cdm:work_has_resource-type ?rtype .`);
+    triples.push(`FILTER (?rtype IN (<http://publications.europa.eu/resource/authority/resource-type/REG>, <http://publications.europa.eu/resource/authority/resource-type/DIR>, <http://publications.europa.eu/resource/authority/resource-type/DIR_IMPL>, <http://publications.europa.eu/resource/authority/resource-type/DEC>, <http://publications.europa.eu/resource/authority/resource-type/REC>))`);
+  }
+
+  // Date
+  triples.push(`?work cdm:work_date_document ?date .`);
 
   if (input.anno) {
     filters.push(`FILTER (YEAR(?date) = ${input.anno})`);
   }
 
-  const keywordFilter = input.query
-    ? `FILTER (CONTAINS(LCASE(STR(COALESCE(?titleIt, ?titleEn, ""))), "${input.query.toLowerCase()}"))`
-    : '';
+  if (input.dataInizio) {
+    filters.push(`FILTER (?date >= "${input.dataInizio}"^^xsd:date)`);
+  }
+
+  if (input.dataFine) {
+    filters.push(`FILTER (?date <= "${input.dataFine}"^^xsd:date)`);
+  }
+
+  // Number (for regulations/directives/decisions)
+  if (input.numero) {
+    triples.push(`?work cdm:resource_legal_number ?numero .`);
+    filters.push(`FILTER (STR(?numero) = "${escapeSparqlString(input.numero)}")`);
+  }
+
+  // Italian expression (title)
+  triples.push(`?work cdm:work_has_expression ?exprIt .`);
+  triples.push(`?exprIt cdm:expression_uses_language <http://publications.europa.eu/resource/authority/language/ITA> .`);
+  triples.push(`?exprIt cdm:expression_title ?titleIt .`);
+
+  // English fallback
+  triples.push(`OPTIONAL {`);
+  triples.push(`  ?work cdm:work_has_expression ?exprEn .`);
+  triples.push(`  ?exprEn cdm:expression_uses_language <http://publications.europa.eu/resource/authority/language/ENG> .`);
+  triples.push(`  ?exprEn cdm:expression_title ?titleEn .`);
+  triples.push(`}`);
+
+  triples.push(`BIND(COALESCE(?titleIt, ?titleEn, "(titolo non disponibile)") AS ?title)`);
+
+  // Resource type label
+  triples.push(`OPTIONAL {`);
+  triples.push(`  ?work cdm:work_has_resource-type ?rtype .`);
+  triples.push(`  ?rtype <http://www.w3.org/2004/02/skos/core#prefLabel> ?rtypeLabel .`);
+  triples.push(`  FILTER (LANG(?rtypeLabel) = "it" || LANG(?rtypeLabel) = "en")`);
+  triples.push(`}`);
+
+  // EuroVoc / subject matter
+  if (input.materia) {
+    const mat = input.materia.toLowerCase();
+    triples.push(`OPTIONAL {`);
+    triples.push(`  ?work cdm:work_is_about_concept_eurovoc ?eurovoc .`);
+    triples.push(`  ?eurovoc <http://www.w3.org/2004/02/skos/core#prefLabel> ?eurovocLabel .`);
+    triples.push(`  FILTER (LANG(?eurovocLabel) = "it" || LANG(?eurovocLabel) = "en")`);
+    triples.push(`}`);
+    filters.push(`FILTER (CONTAINS(LCASE(STR(COALESCE(?titleIt, ""))), "${escapeSparqlString(mat)}") || CONTAINS(LCASE(STR(COALESCE(?eurovocLabel, ""))), "${escapeSparqlString(mat)}"))`);
+  }
+
+  // Keyword filter
+  if (input.query && !input.materia) {
+    const kw = input.query.toLowerCase();
+    filters.push(`FILTER (CONTAINS(LCASE(STR(?titleIt)), "${escapeSparqlString(kw)}") || CONTAINS(LCASE(STR(COALESCE(?titleEn, ""))), "${escapeSparqlString(kw)}"))`);
+  }
 
   return `PREFIX cdm: <http://publications.europa.eu/ontology/cdm#>
 PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 SELECT DISTINCT ?celex ?title ?date ?rtypeLabel
 WHERE {
-  ${filters.join('\n  ')}
-  OPTIONAL {
-    ?work cdm:work_has_expression ?exprIt .
-    ?exprIt cdm:expression_uses_language <http://publications.europa.eu/resource/authority/language/ITA> .
-    ?exprIt cdm:expression_title ?titleIt .
-  }
-  OPTIONAL {
-    ?work cdm:work_has_expression ?exprEn .
-    ?exprEn cdm:expression_uses_language <http://publications.europa.eu/resource/authority/language/ENG> .
-    ?exprEn cdm:expression_title ?titleEn .
-  }
-  BIND(COALESCE(?titleIt, ?titleEn) AS ?title)
-  OPTIONAL {
-    ?work cdm:work_has_resource-type ?rtype .
-    ?rtype <http://www.w3.org/2004/02/skos/core#prefLabel> ?rtypeLabel .
-    FILTER (LANG(?rtypeLabel) = "it" || LANG(?rtypeLabel) = "en")
-  }
-  ${keywordFilter}
+  ${triples.join('\n  ')}
+  ${filters.length ? filters.join('\n  ') : ''}
 }
 ORDER BY DESC(?date)
 LIMIT ${limit}
@@ -77,6 +118,7 @@ export async function searchEurLex(input: SearchEurLexInput): Promise<{
     url?: string;
   }>;
   totali: number;
+  query: string;
 }> {
   const query = buildSparqlQuery(input);
 
@@ -116,6 +158,7 @@ export async function searchEurLex(input: SearchEurLexInput): Promise<{
           : undefined,
       })),
       totali: bindings.length,
+      query,
     };
   } catch (error) {
     const parsed = parseApiError(error);
