@@ -12,6 +12,8 @@ BetterCallClaude Italia espone un insieme di **MCP server** (Model Context Proto
 https://mcp-italia.bettercallclaude.ch
 ```
 
+> ⚠️ **Attenzione**: il dominio è configurato ma il deploy su Railway deve essere attivato manualmente. Vedi [Guida al Deploy](docs/04-DEPLOYMENT-GUIDE.md).
+
 ## Server disponibili
 
 | Server | Fonte | Endpoint |
@@ -42,6 +44,20 @@ Aggiungi al tuo `.mcp.json`:
 }
 ```
 
+## Deploy su Railway (Produzione)
+
+Il progetto è pronto per il deploy su [Railway](https://railway.app) con auto-deploy su ogni push a `main`.
+
+**Passi rapidi:**
+1. Vai su https://railway.app → Login con GitHub
+2. **New Project** → **Deploy from GitHub repo**
+3. Seleziona `fedec65/BetterCallClaudeMCP_Italy`
+4. Railway rileva automaticamente `railway.toml` e il Dockerfile
+5. Clicca **Deploy** — il servizio è online in 2-3 minuti
+6. (Opzionale) Configura il dominio custom `mcp-italia.bettercallclaude.ch`
+
+Per la guida completa passo-passo: [docs/04-DEPLOYMENT-GUIDE.md](docs/04-DEPLOYMENT-GUIDE.md)
+
 ## Sviluppo locale
 
 ```bash
@@ -49,13 +65,16 @@ Aggiungi al tuo `.mcp.json`:
 npm install
 
 # Build tutti i workspace
-npm run build
+npm run build --workspaces
 
 # Avvio aggregatore HTTP
 npm start
 
 # Test
-npm test
+npm run test:run
+
+# Type check
+npm run typecheck --workspaces
 ```
 
 ## Struttura del repository
@@ -74,6 +93,13 @@ mcp-servers/
 mcp-servers-http/     # Aggregatore HTTP Express
 docs/                 # Documentazione
 ```
+
+## Documentazione
+
+- [Architettura](docs/01-ARCHITECTURE.md)
+- [Specifiche Tool](docs/02-TOOL-SPECIFICATIONS.md)
+- [Guida Integrazione API](docs/03-API-INTEGRATION-GUIDE.md)
+- [Guida al Deploy](docs/04-DEPLOYMENT-GUIDE.md)
 
 ## Licenza
 
