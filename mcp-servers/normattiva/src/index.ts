@@ -23,7 +23,7 @@ const SERVER_VERSION = '1.0.0';
 
 const tools: Tool[] = [
   {
-    name: 'normattiva:search',
+    name: 'normattiva_search',
     description: `Ricerca semplice negli atti normativi italiani tramite Normattiva.
 
 Cerca parole chiave nel titolo e/o nel testo degli atti normativi dal 1861 ad oggi.
@@ -49,7 +49,7 @@ Restituisce elenco atti con URN, titolo, tipo, numero, anno, date, stato.`,
     },
   },
   {
-    name: 'normattiva:search_advanced',
+    name: 'normattiva_search_advanced',
     description: `Ricerca avanzata negli atti normativi italiani tramite Normattiva.
 
 Permette di filtrare per tipo di atto, date di emanazione/pubblicazione, numero, vigenza.
@@ -60,7 +60,7 @@ Parametri:
 - dataInizioEmanazione / dataFineEmanazione: date emanazione (YYYY-MM-DD)
 - dataInizioPubblicazione / dataFinePubblicazione: date pubblicazione (YYYY-MM-DD)
 - vigenza: data vigenza (YYYY-MM-DD)
-- classeProvvedimento: ID classe provvedimento (usa normattiva:elenco_tipi)
+- classeProvvedimento: ID classe provvedimento (usa normattiva_elenco_tipi)
 - denominazioneAtto: tipo atto (es. DECRETO, LEGGE)
 - annoProvvedimento: anno emanazione
 - numeroProvvedimento: numero provvedimento
@@ -87,7 +87,7 @@ Parametri:
     },
   },
   {
-    name: 'normattiva:get_atto',
+    name: 'normattiva_get_atto',
     description: `Recupera i metadati di un atto normativo tramite codice redazionale e data GU.
 
 Parametri:
@@ -105,7 +105,7 @@ Restituisce metadati completi e URL al portale Normattiva.`,
     },
   },
   {
-    name: 'normattiva:elenco_tipi',
+    name: 'normattiva_elenco_tipi',
     description: `Elenca le tipologie di provvedimento disponibili in Normattiva.
 
 Parametri:
@@ -135,28 +135,28 @@ export function createNormattivaServer(): Server {
 
     try {
       switch (name) {
-        case 'normattiva:search': {
+        case 'normattiva_search': {
           const input = SearchInputSchema.parse(args);
           const result = await searchNormattiva(input);
           return {
             content: [{ type: 'text', text: JSON.stringify({ success: true, data: result }, null, 2) }],
           };
         }
-        case 'normattiva:search_advanced': {
+        case 'normattiva_search_advanced': {
           const input = SearchAdvancedInputSchema.parse(args);
           const result = await searchNormattivaAdvanced(input);
           return {
             content: [{ type: 'text', text: JSON.stringify({ success: true, data: result }, null, 2) }],
           };
         }
-        case 'normattiva:get_atto': {
+        case 'normattiva_get_atto': {
           const input = GetAttoInputSchema.parse(args);
           const result = await getAttoNormattiva(input);
           return {
             content: [{ type: 'text', text: JSON.stringify({ success: true, data: result }, null, 2) }],
           };
         }
-        case 'normattiva:elenco_tipi': {
+        case 'normattiva_elenco_tipi': {
           const input = ElencoTipiInputSchema.parse(args);
           const result = await elencoTipiNormattiva(input);
           return {

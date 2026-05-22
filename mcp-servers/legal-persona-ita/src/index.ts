@@ -12,7 +12,7 @@ import { draftDocument } from './tools/draft-document.js';
 
 const tools: Tool[] = [
   {
-    name: 'legal-persona-ita:draft_document',
+    name: 'legal-persona-ita_draft_document',
     description: `Redige una bozza di documento giuridico italiano.
 
 Tipi supportati:
@@ -55,7 +55,7 @@ export function createLegalPersonaItaServer(): Server {
     const { name, arguments: args } = request.params;
     try {
       switch (name) {
-        case 'legal-persona-ita:draft_document': {
+        case 'legal-persona-ita_draft_document': {
           const input = DraftDocumentInputSchema.parse(args);
           const result = await draftDocument(input);
           return { content: [{ type: 'text', text: JSON.stringify({ success: true, data: result }, null, 2) }] };

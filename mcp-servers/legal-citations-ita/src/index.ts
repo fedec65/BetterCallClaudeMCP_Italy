@@ -18,7 +18,7 @@ import { formatCitation } from './tools/format-citation.js';
 
 const tools: Tool[] = [
   {
-    name: 'legal-citations-ita:validate',
+    name: 'legal-citations-ita_validate',
     description: `Valida una citazione normativa italiana.
 
 Parametri:
@@ -32,7 +32,7 @@ Parametri:
     },
   },
   {
-    name: 'legal-citations-ita:parse',
+    name: 'legal-citations-ita_parse',
     description: `Parsa una citazione normativa italiana estraendo tipo, numero, anno, articolo, comma.
 
 Parametri:
@@ -46,7 +46,7 @@ Parametri:
     },
   },
   {
-    name: 'legal-citations-ita:format',
+    name: 'legal-citations-ita_format',
     description: `Formatta una citazione normativa in forma breve o completa.
 
 Parametri:
@@ -79,17 +79,17 @@ export function createLegalCitationsItaServer(): Server {
     const { name, arguments: args } = request.params;
     try {
       switch (name) {
-        case 'legal-citations-ita:validate': {
+        case 'legal-citations-ita_validate': {
           const input = ValidateCitationInputSchema.parse(args);
           const result = await validateCitation(input);
           return { content: [{ type: 'text', text: JSON.stringify({ success: true, data: result }, null, 2) }] };
         }
-        case 'legal-citations-ita:parse': {
+        case 'legal-citations-ita_parse': {
           const input = ParseCitationInputSchema.parse(args);
           const result = await parseCitation(input);
           return { content: [{ type: 'text', text: JSON.stringify({ success: true, data: result }, null, 2) }] };
         }
-        case 'legal-citations-ita:format': {
+        case 'legal-citations-ita_format': {
           const input = FormatCitationInputSchema.parse(args);
           const result = await formatCitation(input);
           return { content: [{ type: 'text', text: JSON.stringify({ success: true, data: result }, null, 2) }] };

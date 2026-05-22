@@ -18,7 +18,7 @@ import { normeIncostituzionali } from './tools/norme-incostituzionali.js';
 
 const tools: Tool[] = [
   {
-    name: 'corte-costituzionale:search',
+    name: 'corte-costituzionale_search',
     description: `Ricerca sentenze della Corte Costituzionale italiana.
 
 ⚠️ LIMITAZIONE: il portale della Corte Costituzionale (cortecostituzionale.it) utilizza protezione anti-bot (DataDome). Lo scraping può fallire. In caso di errore, il tool restituisce URL diretti per la consultazione manuale.
@@ -42,7 +42,7 @@ Parametri:
     },
   },
   {
-    name: 'corte-costituzionale:get_sentenza',
+    name: 'corte-costituzionale_get_sentenza',
     description: `Recupera il testo integrale di una sentenza della Corte Costituzionale.
 
 Parametri:
@@ -58,7 +58,7 @@ Parametri:
     },
   },
   {
-    name: 'corte-costituzionale:norme_incostituzionali',
+    name: 'corte-costituzionale_norme_incostituzionali',
     description: `Elenco delle norme dichiarate incostituzionali dalla Corte Costituzionale.
 
 Parametri:
@@ -88,21 +88,21 @@ export function createCorteCostituzionaleServer(): Server {
 
     try {
       switch (name) {
-        case 'corte-costituzionale:search': {
+        case 'corte-costituzionale_search': {
           const input = SearchSentenzeInputSchema.parse(args);
           const result = await searchSentenze(input);
           return {
             content: [{ type: 'text', text: JSON.stringify({ success: true, data: result }, null, 2) }],
           };
         }
-        case 'corte-costituzionale:get_sentenza': {
+        case 'corte-costituzionale_get_sentenza': {
           const input = GetSentenzaInputSchema.parse(args);
           const result = await getSentenza(input);
           return {
             content: [{ type: 'text', text: JSON.stringify({ success: true, data: result }, null, 2) }],
           };
         }
-        case 'corte-costituzionale:norme_incostituzionali': {
+        case 'corte-costituzionale_norme_incostituzionali': {
           const input = NormeIncostituzionaliInputSchema.parse(args);
           const result = await normeIncostituzionali(input);
           return {

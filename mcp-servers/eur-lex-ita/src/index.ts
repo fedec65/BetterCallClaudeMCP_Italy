@@ -13,7 +13,7 @@ import { getAttoCelex } from './tools/get-atto-celex.js';
 
 const tools: Tool[] = [
   {
-    name: 'eur-lex-ita:search',
+    name: 'eur-lex-ita_search',
     description: `Ricerca atti UE in lingua italiana tramite EUR-Lex SPARQL.
 
 Parametri:
@@ -44,7 +44,7 @@ Parametri:
     },
   },
   {
-    name: 'eur-lex-ita:get_atto_celex',
+    name: 'eur-lex-ita_get_atto_celex',
     description: `Recupera un atto UE tramite codice CELEX.
 
 Parametri:
@@ -71,12 +71,12 @@ export function createEurLexItaServer(): Server {
     const { name, arguments: args } = request.params;
     try {
       switch (name) {
-        case 'eur-lex-ita:search': {
+        case 'eur-lex-ita_search': {
           const input = SearchEurLexInputSchema.parse(args);
           const result = await searchEurLex(input);
           return { content: [{ type: 'text', text: JSON.stringify({ success: true, data: result }, null, 2) }] };
         }
-        case 'eur-lex-ita:get_atto_celex': {
+        case 'eur-lex-ita_get_atto_celex': {
           const input = GetAttoCelexInputSchema.parse(args);
           const result = await getAttoCelex(input);
           return { content: [{ type: 'text', text: JSON.stringify({ success: true, data: result }, null, 2) }] };

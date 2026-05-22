@@ -13,7 +13,7 @@ import { getSentenzaGiustiziaAmministrativa } from './tools/get-sentenza.js';
 
 const tools: Tool[] = [
   {
-    name: 'giustizia-amministrativa:search',
+    name: 'giustizia-amministrativa_search',
     description: `Ricerca sentenze di TAR e Consiglio di Stato.
 
 ⚠️ LIMITAZIONE: il portale giustizia-amministrativa.it utilizza Liferay ed è spesso instabile o lento. Lo scraping può fallire con timeout. In caso di errore, il tool restituisce URL diretti per la consultazione manuale.
@@ -38,7 +38,7 @@ Parametri:
     },
   },
   {
-    name: 'giustizia-amministrativa:get_sentenza',
+    name: 'giustizia-amministrativa_get_sentenza',
     description: `Recupera il testo integrale di una sentenza del TAR o Consiglio di Stato.
 
 Parametri:
@@ -65,12 +65,12 @@ export function createGiustiziaAmministrativaServer(): Server {
     const { name, arguments: args } = request.params;
     try {
       switch (name) {
-        case 'giustizia-amministrativa:search': {
+        case 'giustizia-amministrativa_search': {
           const input = SearchSentenzeInputSchema.parse(args);
           const result = await searchGiustiziaAmministrativa(input);
           return { content: [{ type: 'text', text: JSON.stringify({ success: true, data: result }, null, 2) }] };
         }
-        case 'giustizia-amministrativa:get_sentenza': {
+        case 'giustizia-amministrativa_get_sentenza': {
           const input = GetSentenzaInputSchema.parse(args);
           const result = await getSentenzaGiustiziaAmministrativa(input);
           return { content: [{ type: 'text', text: JSON.stringify({ success: true, data: result }, null, 2) }] };

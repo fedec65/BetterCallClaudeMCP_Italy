@@ -76,6 +76,6 @@ export async function searchNormattiva(input: SearchInput): Promise<SearchResult
     };
   } catch (error) {
     const parsed = parseApiError(error);
-    throw new Error(`[normattiva:search] ${parsed.code}: ${parsed.message}`);
+    throw new Error(`[normattiva_search] ${parsed.code}: ${parsed.message}`);
   }
 }

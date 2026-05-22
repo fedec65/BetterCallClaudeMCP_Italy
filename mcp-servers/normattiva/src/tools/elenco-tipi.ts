@@ -42,6 +42,6 @@ export async function elencoTipiNormattiva(
     };
   } catch (error) {
     const parsed = parseApiError(error);
-    throw new Error(`[normattiva:elenco_tipi] ${parsed.code}: ${parsed.message}`);
+    throw new Error(`[normattiva_elenco_tipi] ${parsed.code}: ${parsed.message}`);
   }
 }

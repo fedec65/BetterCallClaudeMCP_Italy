@@ -76,7 +76,7 @@ Risposta JSON-RPC → Client
 
 ## Convenzioni
 
-1. **Naming tool**: `<server>:<azione>` (es. `normattiva:search`)
+1. **Naming tool**: `<server>_<azione>` (es. `normattiva_search`)
 2. **Risposte**: envelope `{ success, data, metadata }` o `{ success, error, metadata }`
 3. **Metadata**: `requestId`, `timestamp`, `tool`, `processingTime`, `cached`
 4. **Lingua**: descrizioni tool ed errori in italiano

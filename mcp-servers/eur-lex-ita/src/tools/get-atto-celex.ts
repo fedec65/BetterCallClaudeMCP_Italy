@@ -83,6 +83,6 @@ LIMIT 1`;
     };
   } catch (error) {
     const parsed = parseApiError(error);
-    throw new Error(`[eur-lex-ita:get_atto_celex] ${parsed.code}: ${parsed.message}`);
+    throw new Error(`[eur-lex-ita_get_atto_celex] ${parsed.code}: ${parsed.message}`);
   }
 }

@@ -76,6 +76,6 @@ export async function searchNormattivaAdvanced(
     };
   } catch (error) {
     const parsed = parseApiError(error);
-    throw new Error(`[normattiva:search_advanced] ${parsed.code}: ${parsed.message}`);
+    throw new Error(`[normattiva_search_advanced] ${parsed.code}: ${parsed.message}`);
   }
 }

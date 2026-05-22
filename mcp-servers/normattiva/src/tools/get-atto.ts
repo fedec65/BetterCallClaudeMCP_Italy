@@ -75,6 +75,6 @@ export async function getAttoNormattiva(input: GetAttoInput): Promise<Normattiva
     };
   } catch (error) {
     const parsed = parseApiError(error);
-    throw new Error(`[normattiva:get_atto] ${parsed.code}: ${parsed.message}`);
+    throw new Error(`[normattiva_get_atto] ${parsed.code}: ${parsed.message}`);
   }
 }

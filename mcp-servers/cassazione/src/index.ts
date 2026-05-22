@@ -13,7 +13,7 @@ import { getSentenzaCassazione } from './tools/get-sentenza.js';
 
 const tools: Tool[] = [
   {
-    name: 'cassazione:search_massime',
+    name: 'cassazione_search_massime',
     description: `Ricerca massime della Corte di Cassazione (porzione pubblica).
 
 ⚠️ LIMITAZIONE: il portale della Corte di Cassazione (cortedicassazione.it) blocca sistematicamente l'accesso con HTTP 403. Lo scraping non è possibile. Il tool restituisce URL di ricerca alternativi (ItalGiure per operatori del diritto) e suggerimenti per la consultazione manuale.
@@ -32,7 +32,7 @@ Parametri:
     },
   },
   {
-    name: 'cassazione:get_sentenza',
+    name: 'cassazione_get_sentenza',
     description: `Recupera sentenza Cassazione (porzione pubblica).
 
 Parametri:
@@ -59,12 +59,12 @@ export function createCassazioneServer(): Server {
     const { name, arguments: args } = request.params;
     try {
       switch (name) {
-        case 'cassazione:search_massime': {
+        case 'cassazione_search_massime': {
           const input = SearchMassimeInputSchema.parse(args);
           const result = await searchMassime(input);
           return { content: [{ type: 'text', text: JSON.stringify({ success: true, data: result }, null, 2) }] };
         }
-        case 'cassazione:get_sentenza': {
+        case 'cassazione_get_sentenza': {
           const input = GetSentenzaInputSchema.parse(args);
           const result = await getSentenzaCassazione(input);
           return { content: [{ type: 'text', text: JSON.stringify({ success: true, data: result }, null, 2) }] };

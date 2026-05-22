@@ -162,6 +162,6 @@ export async function searchEurLex(input: SearchEurLexInput): Promise<{
     };
   } catch (error) {
     const parsed = parseApiError(error);
-    throw new Error(`[eur-lex-ita:search] ${parsed.code}: ${parsed.message}`);
+    throw new Error(`[eur-lex-ita_search] ${parsed.code}: ${parsed.message}`);
   }
 }

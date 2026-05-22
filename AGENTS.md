@@ -15,7 +15,7 @@ Quick reference per agenti di coding che lavorano su questo repository.
 ## Convenzioni
 
 1. **Import extensions:** `import { foo } from './bar.js'` (anche per file `.ts`)
-2. **Naming tool:** `<server>:<azione>` (es. `normattiva:search`, `normattiva:get_atto`)
+2. **Naming tool:** `<server>_<azione>` (es. `normattiva_search`, `normattiva_get_atto`)
 3. **Risposte MCP:** JSON stringify con envelope `{ success, data, metadata }` o `{ success, error, metadata }`
 4. **Metadata:** `requestId`, `timestamp`, `tool`, `processingTime`, `cached`
 5. **Lingua:** descrizioni tool ed errori user-facing in **italiano**
