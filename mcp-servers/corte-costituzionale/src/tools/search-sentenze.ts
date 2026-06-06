@@ -28,7 +28,10 @@ async function queryOpenData(
 }>> {
   const filters: string[] = [];
   if (anno) filters.push(`FILTER(?anno = ${anno})`);
-  if (numero) filters.push(`FILTER(STR(?numero) = "${numero}")`);
+  if (numero) {
+    const escapedNumero = numero.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+    filters.push(`FILTER(STR(?numero) = "${escapedNumero}")`);
+  }
   if (keyword) {
     const escaped = keyword.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
     filters.push(`FILTER(CONTAINS(LCASE(STR(?epigrafe)), LCASE("${escaped}")))`);

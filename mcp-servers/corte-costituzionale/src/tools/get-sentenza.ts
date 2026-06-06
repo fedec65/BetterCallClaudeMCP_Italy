@@ -25,7 +25,7 @@ SELECT ?testo ?epigrafe ?tipo ?data_decisione ?ecli
 WHERE {
   ?s a dcc:Pronuncia .
   ?s dcc:anno ${anno} .
-  ?s dcc:numero "${numero}" .
+  ?s dcc:numero "${numero.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}" .
   OPTIONAL { ?s dcc:testo ?testo }
   OPTIONAL { ?s dcc:epigrafe ?epigrafe }
   OPTIONAL { ?s dcc:tipo ?tipo }

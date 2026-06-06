@@ -288,6 +288,10 @@ export async function getSentenzaItalgiure(id: string): Promise<{
   };
 } | {
   success: false;
+  cookieValido: true;
+  messaggio: string;
+} | {
+  success: false;
   cookieValido: false;
   fallback: {
     urlItalgiure: string;
@@ -334,12 +338,8 @@ export async function getSentenzaItalgiure(id: string): Promise<{
     if (!doc) {
       return {
         success: false,
-        cookieValido: false,
-        fallback: {
-          urlItalgiure: `${ITALGIURE_BASE}/sncass.php`,
-          urlSentenzeWeb: 'https://www.italgiure.giustizia.it/sncass/',
-          istruzioni: `Sentenza ${id} non trovata in ItalGiure. Prova SentenzeWeb (gratuito) o verifica l'identificativo.`,
-        },
+        cookieValido: true,
+        messaggio: `Sentenza ${id} non trovata in ItalGiure. Prova SentenzeWeb (https://www.italgiure.giustizia.it/sncass/) o verifica l'identificativo.`,
       };
     }
 
