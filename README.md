@@ -28,8 +28,43 @@ https://mcp-italia.bettercallclaude.ch
 
 ### Note sui server
 
-- **`cassazione`**: richiede un cookie di sessione attivo da [ItalGiure](https://www.italgiure.giustizia.it/sncass/) (accesso con SPID o credenziali professionali). Configura la variabile d'ambiente `ITALGIURE_COOKIE` o salva il cookie in un file `italgiure_cookie.txt` nella working directory. Se il cookie non è configurato, il tool restituisce URL di fallback per la consultazione manuale.
 - **Rate limiting**: il gateway è pubblico ma protetto da rate-limiting per IP (100 req/15min generico, 30 req/15min su endpoint MCP). Se superi i limiti, riceverai `429 Too Many Requests`.
+
+### Cassazione — Setup cookie ItalGiure
+
+Il server `cassazione` interroga l'API Solr di [ItalGiure](https://www.italgiure.giustizia.it/sncass/) (CED della Corte di Cassazione), che richiede autenticazione tramite cookie di sessione.
+
+#### Cosa succede senza cookie
+
+Senza il cookie configurato, il connettore **funziona comunque** ma con capacità ridotte:
+- La ricerca restituisce URL di fallback per la consultazione manuale (SentenzeWeb, Google, DuckDuckGo)
+- [SentenzeWeb](https://www.italgiure.giustizia.it/sncass/) è gratuito e copre le sentenze dal 2012 in poi, ma non è interrogabile via API
+- Le massime complete e le sentenze precedenti al 2012 non sono accessibili senza autenticazione
+
+#### Come ottenere e configurare il cookie
+
+1. **Accedi a ItalGiure** con SPID o credenziali istituzionali:
+   - Vai su https://www.italgiure.giustizia.it/sncass/
+   - Esegui il login (SPID, CNS, o credenziali ministeriali/professionali)
+
+2. **Estrai il cookie di sessione** dal browser:
+   - Apri DevTools (F12) → scheda **Application** (Chrome) o **Storage** (Firefox)
+   - Sezione **Cookies** → `https://www.italgiure.giustizia.it`
+   - Copia il valore del cookie `JSESSIONID` (es. `JSESSIONID=ABC123DEF456`)
+   - In alternativa, dalla Console: `document.cookie`
+
+3. **Configura la variabile d'ambiente**:
+   ```bash
+   # Nel file .env del server (o variabile d'ambiente Railway)
+   ITALGIURE_COOKIE="JSESSIONID=ABC123DEF456"
+   ```
+   Oppure salva il cookie in un file `italgiure_cookie.txt` nella working directory del server.
+
+#### Durata e rinnovo
+
+- Il cookie di sessione ItalGiure ha durata limitata (tipicamente alcune ore)
+- Quando scade, il connettore rileva automaticamente l'invalidità e restituisce i fallback
+- Per un uso continuativo, il cookie deve essere rinnovato periodicamente
 
 ## Configurazione plugin BetterCallClaude
 
