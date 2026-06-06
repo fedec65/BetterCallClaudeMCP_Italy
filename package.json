@@ -1,6 +1,6 @@
 {
   "name": "bettercallclaude-mcp-italia",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "BetterCallClaude Italia — MCP Servers for Italian Legal Research",
   "type": "module",
   "private": true,

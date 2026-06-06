@@ -1,6 +1,6 @@
 {
   "name": "@bettercallclaude-italia/http-aggregator",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "HTTP aggregator for BetterCallClaude Italia MCP servers",
   "type": "module",
   "main": "dist/index.js",

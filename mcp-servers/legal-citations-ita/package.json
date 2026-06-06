@@ -1,6 +1,6 @@
 {
   "name": "@bettercallclaude-italia/legal-citations-ita",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "DESC",
   "type": "module",
   "main": "dist/index.js",
