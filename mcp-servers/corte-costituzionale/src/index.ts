@@ -19,13 +19,13 @@ import { normeIncostituzionali } from './tools/norme-incostituzionali.js';
 const tools: Tool[] = [
   {
     name: 'corte-costituzionale_search',
-    description: `Ricerca sentenze della Corte Costituzionale italiana tramite il portale Open Data (dati.cortecostituzionale.it, CC BY-SA 3.0).
+    description: `Ricerca sentenze della Corte Costituzionale italiana tramite dataset JSON Open Data (dati.cortecostituzionale.it, CC BY-SA 3.0). Dati aggiornati settimanalmente, pronunce dal 1956 ad oggi.
 
 Parametri:
 - numero: numero sentenza
-- anno: anno sentenza
+- anno: anno sentenza (se omesso cerca ultimi 3 anni)
 - materia: materia o norma contestata
-- parolaChiave: parola chiave full-text
+- parolaChiave: parola chiave full-text (cerca in epigrafe, testo, dispositivo)
 - page / pageSize: paginazione`,
     inputSchema: {
       type: 'object',
@@ -41,7 +41,7 @@ Parametri:
   },
   {
     name: 'corte-costituzionale_get_sentenza',
-    description: `Recupera il testo integrale di una sentenza della Corte Costituzionale tramite Open Data (dati.cortecostituzionale.it).
+    description: `Recupera il testo integrale di una sentenza della Corte Costituzionale tramite dataset JSON Open Data (dati.cortecostituzionale.it).
 
 Parametri:
 - numero (obbligatorio): numero sentenza
