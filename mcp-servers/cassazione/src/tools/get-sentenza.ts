@@ -35,6 +35,16 @@ export async function getSentenzaCassazione(input: GetSentenzaInput): Promise<{
     };
   }
 
+  if (result.cookieValido) {
+    return {
+      id: input.id,
+      autenticazione: {
+        cookieValido: true,
+        messaggio: result.messaggio,
+      },
+    };
+  }
+
   return {
     id: input.id,
     autenticazione: {
