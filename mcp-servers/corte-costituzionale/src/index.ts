@@ -19,9 +19,7 @@ import { normeIncostituzionali } from './tools/norme-incostituzionali.js';
 const tools: Tool[] = [
   {
     name: 'corte-costituzionale_search',
-    description: `Ricerca sentenze della Corte Costituzionale italiana.
-
-⚠️ LIMITAZIONE: il portale della Corte Costituzionale (cortecostituzionale.it) utilizza protezione anti-bot (DataDome). Lo scraping può fallire. In caso di errore, il tool restituisce URL diretti per la consultazione manuale.
+    description: `Ricerca sentenze della Corte Costituzionale italiana tramite il portale Open Data (dati.cortecostituzionale.it, CC BY-SA 3.0).
 
 Parametri:
 - numero: numero sentenza
@@ -43,7 +41,7 @@ Parametri:
   },
   {
     name: 'corte-costituzionale_get_sentenza',
-    description: `Recupera il testo integrale di una sentenza della Corte Costituzionale.
+    description: `Recupera il testo integrale di una sentenza della Corte Costituzionale tramite Open Data (dati.cortecostituzionale.it).
 
 Parametri:
 - numero (obbligatorio): numero sentenza

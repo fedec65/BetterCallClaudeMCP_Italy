@@ -50,6 +50,6 @@ export async function normeIncostituzionali(input: NormeIncostituzionaliInput): 
     totali: normeRiferimento.length,
     urlRicerca,
     urlOpenData,
-    note: 'Il sito della Corte Costituzionale utilizza protezione anti-bot. I dati mostrati sono riferimenti noti. Per ricerche aggiornate consultare il portale Open Data o il sito ufficiale.',
+    note: 'Riferimenti noti di norme dichiarate incostituzionali. Per ricerche aggiornate consultare il portale Open Data (dati.cortecostituzionale.it, CC BY-SA 3.0) o il sito ufficiale.',
   };
 }

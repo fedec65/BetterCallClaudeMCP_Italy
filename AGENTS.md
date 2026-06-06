@@ -54,22 +54,22 @@ L'aggregatore in `mcp-servers-http/src/server-registry.ts` importa la factory di
 | Server | Fonte | Tipo accesso | Affidabilità |
 |---|---|---|---|
 | normattiva | dati.normattiva.it | Open Data API | ✅ Alta |
-| corte-costituzionale | cortecostituzionale.it | Web scraping | ⚠️ Bassa (anti-bot DataDome) |
-| giustizia-amministrativa | giustizia-amministrativa.it | Web scraping | ⚠️ Bassa (Liferay instabile) |
-| cassazione | italgiure.giustizia.it (API Solr CED) | API Solr autenticata (cookie sessione) | ⚠️ Media (richiede autenticazione professionale/SPID) |
+| corte-costituzionale | dati.cortecostituzionale.it | Open Data SPARQL (CC BY-SA 3.0) | ✅ Alta |
+| giustizia-amministrativa | openga.giustizia-amministrativa.it | Open Data CKAN API (CC BY 4.0) | ✅ Alta |
+| cassazione | italgiure.giustizia.it (API Solr CED) | API Solr autenticata + fallback SentenzeWeb | ⚠️ Media (cookie ItalGiure, fallback gratuito) |
 | eur-lex-ita | eur-lex.europa.eu | Open + API + SPARQL | ✅ Alta |
 | legal-citations-ita | Logica interna | — | ✅ Alta |
 | legal-persona-ita | Logica interna | — | ✅ Alta |
 
-### Strategia fallback per scraper problematici
+### Strategia di accesso dati
 
-I 3 server basati su scraping (corte-costituzionale, giustizia-amministrativa, cassazione) sono progettati per restituire **URL diretti di consultazione** quando lo scraping fallisce, invece di restituire errori grezzi. Questo permette all'utente (o a Claude) di consultare manualmente le fonti.
+I 3 server ex-scraping ora usano fonti dati ufficiali dove disponibili:
 
-- **Corte Costituzionale:** fallback a `actionPronuncia.do` e `actionSchedaPronuncia.do` con ECLI
-- **Giustizia Amministrativa:** fallback al portale Liferay + URL DeJure open-access
-- **Cassazione:** primario via API Solr ItalGiure con cookie di sessione ASP; fallback automatico a URL diretti (ItalGiure manuale, Google, DuckDuckGo, ECLI) quando il cookie è assente o scaduto
+- **Corte Costituzionale:** primario via SPARQL endpoint `dati.cortecostituzionale.it` (CC BY-SA 3.0); fallback a URL ECLI, Google, DuckDuckGo se l'endpoint non risponde
+- **Giustizia Amministrativa:** primario via CKAN Datastore API `openga.giustizia-amministrativa.it` (CC BY 4.0); nessun scraping
+- **Cassazione:** primario via API Solr ItalGiure con cookie di sessione; fallback automatico a SentenzeWeb (gratuito, senza login), URL ECLI, Google, DuckDuckGo
 
-**Non usare Puppeteer/Playwright** per aggirare le protezioni: violerebbe i ToS dei portali, aumenterebbe i tempi di deploy e non risolverebbe in modo affidabile.
+**Non usare Puppeteer/Playwright** per aggirare le protezioni: violerebbe i ToS dei portali.
 
 ## Branching
 

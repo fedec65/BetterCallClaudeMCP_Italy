@@ -147,6 +147,7 @@ export async function searchItalgiure(input: SearchMassimeInput): Promise<{
   fallback: {
     urlRicerca: string;
     urlItalgiure: string;
+    urlSentenzeWeb: string;
     urlEcli?: string;
     urlGoogle: string;
     urlDuckDuckGo: string;
@@ -163,6 +164,7 @@ export async function searchItalgiure(input: SearchMassimeInput): Promise<{
   params.set('q', input.query);
   const urlRicerca = `${ITALGIURE_BASE}/isapi/hc.dll/sn.solr/sn-collection/select?app.query&${params.toString()}`;
   const urlItalgiure = `${ITALGIURE_BASE}/sncass.php?${new URLSearchParams({ q: input.query, tipo: 'massime' }).toString()}`;
+  const urlSentenzeWeb = `https://www.italgiure.giustizia.it/sncass/`;
   const estremi = extractEstremi(input.query);
   const urlEcli = estremi ? buildEcliUrlCassazione(estremi.anno, estremi.numero) : undefined;
   const { google, duckduckgo } = buildSearchEngineUrls('cortedicassazione.it', [input.query, 'sentenza']);
@@ -176,10 +178,11 @@ export async function searchItalgiure(input: SearchMassimeInput): Promise<{
       fallback: {
         urlRicerca,
         urlItalgiure,
+        urlSentenzeWeb,
         urlEcli,
         urlGoogle: google,
         urlDuckDuckGo: duckduckgo,
-        istruzioni: 'Cookie di sessione ItalGiure non configurato. Per attivare la ricerca avanzata: 1) Accedi a https://www.italgiure.giustizia.it/sncass/ con SPID o credenziali professionali, 2) Esegui document.cookie nel browser, 3) Imposta la variabile d\'ambiente ITALGIURE_COOKIE o salva il valore in italgiure_cookie.txt.',
+        istruzioni: 'Cookie di sessione ItalGiure non configurato. Alternativa gratuita senza login: SentenzeWeb (https://www.italgiure.giustizia.it/sncass/, sentenze dal 2012). Per la ricerca avanzata (massime complete): 1) Accedi a ItalGiure con SPID/credenziali, 2) Esegui document.cookie, 3) Imposta ITALGIURE_COOKIE.',
       },
     };
   }
@@ -240,10 +243,11 @@ export async function searchItalgiure(input: SearchMassimeInput): Promise<{
         fallback: {
           urlRicerca,
           urlItalgiure,
+          urlSentenzeWeb,
           urlEcli,
           urlGoogle: google,
           urlDuckDuckGo: duckduckgo,
-          istruzioni: `Sessione ItalGiure scaduta o non valida (${parsed.message}). Aggiorna il cookie: 1) Naviga su https://www.italgiure.giustizia.it/sncass/ , 2) Esegui document.cookie, 3) Aggiorna ITALGIURE_COOKIE o italgiure_cookie.txt.`,
+          istruzioni: `Sessione ItalGiure scaduta (${parsed.message}). Alternativa gratuita senza login: SentenzeWeb. Per la ricerca avanzata: aggiorna il cookie via document.cookie e ITALGIURE_COOKIE.`,
         },
       };
     }
@@ -257,10 +261,11 @@ export async function searchItalgiure(input: SearchMassimeInput): Promise<{
       fallback: {
         urlRicerca,
         urlItalgiure,
+        urlSentenzeWeb,
         urlEcli,
         urlGoogle: google,
         urlDuckDuckGo: duckduckgo,
-        istruzioni: `Errore nella ricerca ItalGiure: ${parsed.message}. Consulta i link di fallback o verifica la connessione.`,
+        istruzioni: `Errore ItalGiure: ${parsed.message}. Prova SentenzeWeb (gratuito, senza login) o i link di fallback.`,
       },
     };
   }
@@ -286,6 +291,7 @@ export async function getSentenzaItalgiure(id: string): Promise<{
   cookieValido: false;
   fallback: {
     urlItalgiure: string;
+    urlSentenzeWeb: string;
     istruzioni: string;
   };
 }> {
@@ -297,7 +303,8 @@ export async function getSentenzaItalgiure(id: string): Promise<{
       cookieValido: false,
       fallback: {
         urlItalgiure: `${ITALGIURE_BASE}/sncass.php`,
-        istruzioni: 'Cookie di sessione ItalGiure non configurato. Per recuperare la sentenza: 1) Accedi a ItalGiure, 2) Esegui document.cookie, 3) Imposta ITALGIURE_COOKIE o italgiure_cookie.txt.',
+        urlSentenzeWeb: 'https://www.italgiure.giustizia.it/sncass/',
+        istruzioni: 'Cookie ItalGiure non configurato. Alternativa gratuita senza login: SentenzeWeb (sentenze dal 2012). Per massime complete: accedi a ItalGiure con SPID/credenziali e configura ITALGIURE_COOKIE.',
       },
     };
   }
@@ -330,7 +337,8 @@ export async function getSentenzaItalgiure(id: string): Promise<{
         cookieValido: false,
         fallback: {
           urlItalgiure: `${ITALGIURE_BASE}/sncass.php`,
-          istruzioni: `Sentenza ${id} non trovata in ItalGiure. Verifica l'identificativo o cerca manualmente.`,
+          urlSentenzeWeb: 'https://www.italgiure.giustizia.it/sncass/',
+          istruzioni: `Sentenza ${id} non trovata in ItalGiure. Prova SentenzeWeb (gratuito) o verifica l'identificativo.`,
         },
       };
     }
@@ -359,9 +367,10 @@ export async function getSentenzaItalgiure(id: string): Promise<{
       cookieValido: false,
       fallback: {
         urlItalgiure: `${ITALGIURE_BASE}/sncass.php`,
+        urlSentenzeWeb: 'https://www.italgiure.giustizia.it/sncass/',
         istruzioni: isAuthError
-          ? `Sessione ItalGiure scaduta (${parsed.message}). Aggiorna il cookie via document.cookie e ITALGIURE_COOKIE.`
-          : `Errore nel recupero sentenza: ${parsed.message}.`,
+          ? `Sessione ItalGiure scaduta (${parsed.message}). Prova SentenzeWeb (gratuito) o aggiorna il cookie.`
+          : `Errore nel recupero sentenza: ${parsed.message}. Prova SentenzeWeb (gratuito).`,
       },
     };
   }

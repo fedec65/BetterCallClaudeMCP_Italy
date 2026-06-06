@@ -22,6 +22,7 @@ export async function getSentenzaCassazione(input: GetSentenzaInput): Promise<{
   };
   fallback?: {
     urlItalgiure: string;
+    urlSentenzeWeb: string;
     istruzioni: string;
   };
 }> {

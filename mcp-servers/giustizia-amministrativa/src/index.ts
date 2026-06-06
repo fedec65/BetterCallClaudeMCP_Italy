@@ -14,9 +14,7 @@ import { getSentenzaGiustiziaAmministrativa } from './tools/get-sentenza.js';
 const tools: Tool[] = [
   {
     name: 'giustizia-amministrativa_search',
-    description: `Ricerca sentenze di TAR e Consiglio di Stato.
-
-⚠️ LIMITAZIONE: il portale giustizia-amministrativa.it utilizza Liferay ed è spesso instabile o lento. Lo scraping può fallire con timeout. In caso di errore, il tool restituisce URL diretti per la consultazione manuale.
+    description: `Ricerca sentenze di TAR e Consiglio di Stato tramite Open Data (openga.giustizia-amministrativa.it, CC BY 4.0).
 
 Parametri:
 - parolaChiave: parola chiave
@@ -39,10 +37,10 @@ Parametri:
   },
   {
     name: 'giustizia-amministrativa_get_sentenza',
-    description: `Recupera il testo integrale di una sentenza del TAR o Consiglio di Stato.
+    description: `Recupera i dettagli di una sentenza del TAR o Consiglio di Stato tramite Open Data.
 
 Parametri:
-- id (obbligatorio): identificativo sentenza`,
+- id (obbligatorio): identificativo (numero provvedimento)`,
     inputSchema: {
       type: 'object',
       properties: {

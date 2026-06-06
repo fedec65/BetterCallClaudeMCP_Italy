@@ -26,6 +26,7 @@ export async function searchMassime(input: SearchMassimeInput): Promise<{
   fallback?: {
     urlRicerca: string;
     urlItalgiure: string;
+    urlSentenzeWeb: string;
     urlEcli?: string;
     urlGoogle: string;
     urlDuckDuckGo: string;
