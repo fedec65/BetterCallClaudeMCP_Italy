@@ -181,6 +181,7 @@ GET https://<TUO-DOMINIO>/health
 | `RATE_LIMIT_MAX` | `100` | Richieste massime per finestra (generico) |
 | `MCP_RATE_LIMIT_MAX` | `30` | Richieste massime per finestra su endpoint MCP |
 | `HEALTH_RATE_LIMIT_MAX` | `60` | Richieste massime per finestra su `/health` |
+| `ITALGIURE_COOKIE` | — | Cookie di sessione per il server `cassazione` (vedi [05-CASSAZIONE-ITALGIURE.md](05-CASSAZIONE-ITALGIURE.md)) |
 
 Per aggiungere variabili su Railway:
 1. Dashboard → Servizio → **Variables**

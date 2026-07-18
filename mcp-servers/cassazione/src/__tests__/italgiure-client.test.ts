@@ -106,5 +106,14 @@ describe('italgiure-client', () => {
       process.env.ITALGIURE_COOKIE = '  cookie-value  ';
       expect(getItalgiureCookie()).toBe('cookie-value');
     });
+
+    it('prioritizes explicit cookie over env var', () => {
+      process.env.ITALGIURE_COOKIE = 'env-cookie';
+      expect(getItalgiureCookie('explicit-cookie')).toBe('explicit-cookie');
+    });
+
+    it('trims explicit cookie value', () => {
+      expect(getItalgiureCookie('  explicit-cookie  ')).toBe('explicit-cookie');
+    });
   });
 });

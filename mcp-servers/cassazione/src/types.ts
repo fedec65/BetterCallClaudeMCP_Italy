@@ -2,6 +2,7 @@ import { z } from 'zod';
 
 export const SearchMassimeInputSchema = z.object({
   query: z.string().min(1).describe('Parole chiave di ricerca (testo libero o sintassi Solr)'),
+  cookie: z.string().optional().describe('Cookie di sessione ItalGiure (opzionale; se omesso, il server cerca ITALGIURE_COOKIE o italgiure_cookie.txt)'),
   materia: z.enum(['civile', 'penale', '']).optional().describe("Filtra per materia: 'civile', 'penale', o omesso per entrambe"),
   anno: z.number().int().min(0).optional().describe('Anno della sentenza (0 o omesso = tutti gli anni)'),
   tipo: z.enum(['sentenza', 'ordinanza', 'decreto', '']).optional().describe("Tipo di provvedimento: 'sentenza', 'ordinanza', 'decreto', o omesso per tutti"),
@@ -13,6 +14,7 @@ export type SearchMassimeInput = z.infer<typeof SearchMassimeInputSchema>;
 
 export const GetSentenzaInputSchema = z.object({
   id: z.string().min(1).describe('Identificativo sentenza (es. snciv2024332127S)'),
+  cookie: z.string().optional().describe('Cookie di sessione ItalGiure (opzionale; se omesso, il server cerca ITALGIURE_COOKIE o italgiure_cookie.txt)'),
 });
 
 export type GetSentenzaInput = z.infer<typeof GetSentenzaInputSchema>;

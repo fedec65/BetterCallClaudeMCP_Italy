@@ -7,9 +7,12 @@ const ITALGIURE_BASE = 'https://www.italgiure.giustizia.it/sncass';
 const SOLR_ENDPOINT = `${ITALGIURE_BASE}/isapi/hc.dll/sn.solr/sn-collection/select?app.query`;
 
 /**
- * Legge il cookie di sessione ItalGiure da env var o da file locale.
+ * Legge il cookie di sessione ItalGiure.
+ * Priorità: parametro esplicito > env var > file locale.
  */
-export function getItalgiureCookie(): string | undefined {
+export function getItalgiureCookie(cookie?: string): string | undefined {
+  if (cookie) return cookie.trim();
+
   const envCookie = process.env.ITALGIURE_COOKIE;
   if (envCookie) return envCookie.trim();
 
@@ -28,8 +31,8 @@ export function getItalgiureCookie(): string | undefined {
 /**
  * Restituisce true se il cookie è configurato.
  */
-export function isItalgiureConfigured(): boolean {
-  return !!getItalgiureCookie();
+export function isItalgiureConfigured(cookie?: string): boolean {
+  return !!getItalgiureCookie(cookie);
 }
 
 /**
@@ -153,7 +156,7 @@ export async function searchItalgiure(input: SearchMassimeInput): Promise<{
     istruzioni: string;
   };
 }> {
-  const cookie = getItalgiureCookie();
+  const cookie = getItalgiureCookie(input.cookie);
   const q = buildSolrQuery(input);
   const rows = input.pageSize ?? 20;
   const start = calculateStart(input.page, input.pageSize);
@@ -269,7 +272,7 @@ export async function searchItalgiure(input: SearchMassimeInput): Promise<{
 /**
  * Recupera una singola sentenza da ItalGiure per ID.
  */
-export async function getSentenzaItalgiure(id: string): Promise<{
+export async function getSentenzaItalgiure(id: string, cookie?: string): Promise<{
   success: true;
   cookieValido: true;
   sentenza: {
@@ -293,15 +296,15 @@ export async function getSentenzaItalgiure(id: string): Promise<{
     istruzioni: string;
   };
 }> {
-  const cookie = getItalgiureCookie();
+  const resolvedCookie = getItalgiureCookie(cookie);
 
-  if (!cookie) {
+  if (!resolvedCookie) {
     return {
       success: false,
       cookieValido: false,
       fallback: {
         urlItalgiure: `${ITALGIURE_BASE}/sncass.php`,
-        istruzioni: 'Cookie di sessione ItalGiure non configurato. Per recuperare la sentenza: 1) Accedi a ItalGiure, 2) Esegui document.cookie, 3) Imposta ITALGIURE_COOKIE o italgiure_cookie.txt.',
+        istruzioni: 'Cookie di sessione ItalGiure non configurato. Per recuperare la sentenza: 1) Accedi a ItalGiure, 2) Esegui document.cookie, 3) Passa il cookie come parametro `cookie` o imposta ITALGIURE_COOKIE / italgiure_cookie.txt.',
       },
     };
   }
@@ -319,7 +322,7 @@ export async function getSentenzaItalgiure(id: string): Promise<{
           fl: 'id,filename,szdec,tipoprov,datdec,numdec,anno,kind,datdep',
         }), {
           headers: {
-            Cookie: cookie,
+            Cookie: resolvedCookie,
           },
         });
         return res.data as SolrResponse;

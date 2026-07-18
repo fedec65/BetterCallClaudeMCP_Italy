@@ -28,7 +28,7 @@ https://mcp-italia.bettercallclaude.ch
 
 ### Note sui server
 
-- **`cassazione`**: richiede un cookie di sessione attivo da [ItalGiure](https://www.italgiure.giustizia.it/sncass/) (accesso con SPID o credenziali professionali). Configura la variabile d'ambiente `ITALGIURE_COOKIE` o salva il cookie in un file `italgiure_cookie.txt` nella working directory. Se il cookie non è configurato, il tool restituisce URL di fallback per la consultazione manuale.
+- **`cassazione`**: richiede un cookie di sessione attivo da [ItalGiure](https://www.italgiure.giustizia.it/sncass/) (accesso con SPID o credenziali professionali). Configura la variabile d'ambiente `ITALGIURE_COOKIE` o salva il cookie in un file `italgiure_cookie.txt` nella working directory. Se il cookie non è configurato, il tool restituisce URL di fallback per la consultazione manuale. **Istruzioni dettagliate**: [docs/05-CASSAZIONE-ITALGIURE.md](docs/05-CASSAZIONE-ITALGIURE.md)
 - **Rate limiting**: il gateway è pubblico ma protetto da rate-limiting per IP (100 req/15min generico, 30 req/15min su endpoint MCP). Se superi i limiti, riceverai `429 Too Many Requests`.
 
 ## Configurazione plugin BetterCallClaude
@@ -105,6 +105,7 @@ docs/                 # Documentazione
 - [Specifiche Tool](docs/02-TOOL-SPECIFICATIONS.md)
 - [Guida Integrazione API](docs/03-API-INTEGRATION-GUIDE.md)
 - [Guida al Deploy](docs/04-DEPLOYMENT-GUIDE.md)
+- [Configurazione Cassazione / ItalGiure](docs/05-CASSAZIONE-ITALGIURE.md)
 
 ## Licenza
 

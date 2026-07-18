@@ -25,7 +25,7 @@ export async function getSentenzaCassazione(input: GetSentenzaInput): Promise<{
     istruzioni: string;
   };
 }> {
-  const result = await getSentenzaItalgiure(input.id);
+  const result = await getSentenzaItalgiure(input.id, input.cookie);
 
   if (result.success) {
     return {
