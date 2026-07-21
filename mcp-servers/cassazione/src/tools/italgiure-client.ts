@@ -7,9 +7,14 @@ const ITALGIURE_BASE = 'https://www.italgiure.giustizia.it/sncass';
 const SOLR_ENDPOINT = `${ITALGIURE_BASE}/isapi/hc.dll/sn.solr/sn-collection/select?app.query`;
 
 /**
- * Legge il cookie di sessione ItalGiure da env var o da file locale.
+ * Legge il cookie di sessione ItalGiure da parametro, env var o file locale.
+ * Priorita': parametro > env var > file locale.
  */
-export function getItalgiureCookie(): string | undefined {
+export function getItalgiureCookie(paramCookie?: string): string | undefined {
+  if (paramCookie && paramCookie.trim()) {
+    return paramCookie.trim();
+  }
+
   const envCookie = process.env.ITALGIURE_COOKIE;
   if (envCookie) return envCookie.trim();
 
@@ -28,8 +33,8 @@ export function getItalgiureCookie(): string | undefined {
 /**
  * Restituisce true se il cookie è configurato.
  */
-export function isItalgiureConfigured(): boolean {
-  return !!getItalgiureCookie();
+export function isItalgiureConfigured(paramCookie?: string): boolean {
+  return !!getItalgiureCookie(paramCookie);
 }
 
 /**
@@ -154,7 +159,7 @@ export async function searchItalgiure(input: SearchMassimeInput): Promise<{
     istruzioni: string;
   };
 }> {
-  const cookie = getItalgiureCookie();
+  const cookie = getItalgiureCookie(input.cookie);
   const q = buildSolrQuery(input);
   const rows = input.pageSize ?? 20;
   const start = calculateStart(input.page, input.pageSize);
@@ -182,7 +187,7 @@ export async function searchItalgiure(input: SearchMassimeInput): Promise<{
         urlEcli,
         urlGoogle: google,
         urlDuckDuckGo: duckduckgo,
-        istruzioni: 'Cookie di sessione ItalGiure non configurato. Alternativa gratuita senza login: SentenzeWeb (https://www.italgiure.giustizia.it/sncass/, sentenze dal 2012). Per la ricerca avanzata (massime complete): 1) Accedi a ItalGiure con SPID/credenziali, 2) Esegui document.cookie, 3) Imposta ITALGIURE_COOKIE.',
+        istruzioni: 'Cookie di sessione ItalGiure non configurato. Alternativa gratuita senza login: SentenzeWeb (https://www.italgiure.giustizia.it/sncass/, sentenze dal 2012). Per la ricerca avanzata (massime complete): 1) Accedi a ItalGiure con SPID/credenziali, 2) Esegui document.cookie, 3) Imposta ITALGIURE_COOKIE o passa il cookie come parametro MCP.',
       },
     };
   }
@@ -247,7 +252,7 @@ export async function searchItalgiure(input: SearchMassimeInput): Promise<{
           urlEcli,
           urlGoogle: google,
           urlDuckDuckGo: duckduckgo,
-          istruzioni: `Sessione ItalGiure scaduta (${parsed.message}). Alternativa gratuita senza login: SentenzeWeb. Per la ricerca avanzata: aggiorna il cookie via document.cookie e ITALGIURE_COOKIE.`,
+          istruzioni: `Sessione ItalGiure scaduta (${parsed.message}). Alternativa gratuita senza login: SentenzeWeb. Per la ricerca avanzata: aggiorna il cookie via document.cookie e ITALGIURE_COOKIE, o passa il cookie come parametro MCP.`,
         },
       };
     }
@@ -274,7 +279,7 @@ export async function searchItalgiure(input: SearchMassimeInput): Promise<{
 /**
  * Recupera una singola sentenza da ItalGiure per ID.
  */
-export async function getSentenzaItalgiure(id: string): Promise<{
+export async function getSentenzaItalgiure(id: string, paramCookie?: string): Promise<{
   success: true;
   cookieValido: true;
   sentenza: {
@@ -299,7 +304,7 @@ export async function getSentenzaItalgiure(id: string): Promise<{
     istruzioni: string;
   };
 }> {
-  const cookie = getItalgiureCookie();
+  const cookie = getItalgiureCookie(paramCookie);
 
   if (!cookie) {
     return {
@@ -308,7 +313,7 @@ export async function getSentenzaItalgiure(id: string): Promise<{
       fallback: {
         urlItalgiure: `${ITALGIURE_BASE}/sncass.php`,
         urlSentenzeWeb: 'https://www.italgiure.giustizia.it/sncass/',
-        istruzioni: 'Cookie ItalGiure non configurato. Alternativa gratuita senza login: SentenzeWeb (sentenze dal 2012). Per massime complete: accedi a ItalGiure con SPID/credenziali e configura ITALGIURE_COOKIE.',
+        istruzioni: 'Cookie ItalGiure non configurato. Alternativa gratuita senza login: SentenzeWeb (sentenze dal 2012). Per massime complete: accedi a ItalGiure con SPID/credenziali e configura ITALGIURE_COOKIE o passa il cookie come parametro MCP.',
       },
     };
   }
