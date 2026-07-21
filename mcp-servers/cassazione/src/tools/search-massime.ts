@@ -4,8 +4,9 @@ import type { SearchMassimeInput } from '../types.js';
 /**
  * Search Cassation Court decisions via ItalGiure Solr API.
  *
- * Requires an active ItalGiure session cookie (ITALGIURE_COOKIE env var
- * or italgiure_cookie.txt file). When the cookie is missing or expired,
+ * Requires an active ItalGiure session cookie. The cookie can be provided
+ * as MCP parameter, via ITALGIURE_COOKIE env var, or via
+ * italgiure_cookie.txt file. When the cookie is missing or expired,
  * the tool returns structured fallback URLs for manual consultation.
  */
 export async function searchMassime(input: SearchMassimeInput): Promise<{
