@@ -4,8 +4,9 @@ import type { GetSentenzaInput } from '../types.js';
 /**
  * Retrieve a single Cassation Court decision via ItalGiure Solr API.
  *
- * Requires an active ItalGiure session cookie (ITALGIURE_COOKIE env var
- * or italgiure_cookie.txt file). When the cookie is missing or expired,
+ * Requires an active ItalGiure session cookie. The cookie can be provided
+ * as MCP parameter, via ITALGIURE_COOKIE env var, or via
+ * italgiure_cookie.txt file. When the cookie is missing or expired,
  * the tool returns structured fallback information.
  */
 export async function getSentenzaCassazione(input: GetSentenzaInput): Promise<{
@@ -26,7 +27,7 @@ export async function getSentenzaCassazione(input: GetSentenzaInput): Promise<{
     istruzioni: string;
   };
 }> {
-  const result = await getSentenzaItalgiure(input.id);
+  const result = await getSentenzaItalgiure(input.id, input.cookie);
 
   if (result.success) {
     return {
