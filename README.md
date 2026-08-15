@@ -44,8 +44,9 @@ Senza il cookie configurato, il connettore **funziona comunque** ma con capacit�
 #### Come ottenere e configurare il cookie
 
 1. **Accedi a ItalGiure** con SPID o credenziali istituzionali:
-   - Vai su https://www.italgiure.giustizia.it/sncass/
+   - Vai sull'**area riservata**: https://www.italgiure.giustizia.it/new/archives
    - Esegui il login (SPID, CNS, o credenziali ministeriali/professionali)
+   - Nota: la pagina di ricerca libera (`/sncass/`, "Sentenze Cassazione") **non** richiede login — il cookie si ottiene dall'area riservata e vale per tutto il dominio `www.italgiure.giustizia.it`
 
 2. **Estrai il cookie di sessione** dal browser:
    - Apri DevTools (F12) → scheda **Application** (Chrome) o **Storage** (Firefox)
