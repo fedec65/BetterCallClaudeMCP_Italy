@@ -60,13 +60,13 @@ function buildSparqlQuery(input: SearchEurLexInput): string {
   }
 
   // Italian expression (title)
-  triples.push(`?work cdm:work_has_expression ?exprIt .`);
+  triples.push(`?exprIt cdm:expression_belongs_to_work ?work .`);
   triples.push(`?exprIt cdm:expression_uses_language <http://publications.europa.eu/resource/authority/language/ITA> .`);
   triples.push(`?exprIt cdm:expression_title ?titleIt .`);
 
   // English fallback
   triples.push(`OPTIONAL {`);
-  triples.push(`  ?work cdm:work_has_expression ?exprEn .`);
+  triples.push(`  ?exprEn cdm:expression_belongs_to_work ?work .`);
   triples.push(`  ?exprEn cdm:expression_uses_language <http://publications.europa.eu/resource/authority/language/ENG> .`);
   triples.push(`  ?exprEn cdm:expression_title ?titleEn .`);
   triples.push(`}`);

@@ -20,12 +20,12 @@ WHERE {
   OPTIONAL { ?work cdm:work_date_document ?date . }
   OPTIONAL { ?work cdm:resource_legal_number ?numero . }
   OPTIONAL {
-    ?work cdm:work_has_expression ?exprIt .
+    ?exprIt cdm:expression_belongs_to_work ?work .
     ?exprIt cdm:expression_uses_language <http://publications.europa.eu/resource/authority/language/ITA> .
     ?exprIt cdm:expression_title ?titleIt .
   }
   OPTIONAL {
-    ?work cdm:work_has_expression ?exprEn .
+    ?exprEn cdm:expression_belongs_to_work ?work .
     ?exprEn cdm:expression_uses_language <http://publications.europa.eu/resource/authority/language/ENG> .
     ?exprEn cdm:expression_title ?titleEn .
   }
