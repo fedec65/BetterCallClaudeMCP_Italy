@@ -1,11 +1,13 @@
 # Configurazione MCP Cassazione (ItalGiure)
 
-Il server MCP `cassazione` richiede un cookie di sessione attivo da **ItalGiure** (`italgiure.giustizia.it/sncass/`) per accedere all'API Solr del CED Ministero della Giustizia. Senza cookie, il tool restituisce solo URL di fallback per la consultazione manuale.
+Il server MCP `cassazione` richiede un cookie di sessione attivo da **ItalGiure** (area riservata `italgiure.giustizia.it/new/archives`) per accedere all'API Solr del CED Ministero della Giustizia. Senza cookie, il tool restituisce solo URL di fallback per la consultazione manuale.
 
 ## Passo 1: Accedere a ItalGiure
 
 1. Apri il browser (Chrome, Firefox, Safari, Edge).
-2. Vai su: https://www.italgiure.giustizia.it/sncass/
+2. Vai sull'**area riservata** ItalGiure: https://www.italgiure.giustizia.it/new/archives
+
+   > La pagina di ricerca libera (`/sncass/`, "Sentenze Cassazione") **non** richiede login: non è lì che si ottiene il cookie. Il cookie di sessione viene rilasciato dall'area riservata dopo l'autenticazione e vale per tutto il dominio `www.italgiure.giustizia.it` (incluso l'endpoint Solr sotto `/sncass` usato dal server).
 3. Effettua il login con:
    - **SPID** (Sistema Pubblico di Identità Digitale), oppure
    - **Credenziali professionali** (es. Avvocatura)
