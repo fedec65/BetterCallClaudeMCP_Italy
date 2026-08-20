@@ -22,6 +22,7 @@
   "license": "AGPL-3.0-or-later",
   "dependencies": {
     "@bettercallclaude-italia/cassazione": "^1.0.0",
+    "@bettercallclaude-italia/citation-verify-ita": "^1.0.0",
     "@bettercallclaude-italia/corte-costituzionale": "^1.0.0",
     "@bettercallclaude-italia/eur-lex-ita": "^1.0.0",
     "@bettercallclaude-italia/giustizia-amministrativa": "^1.0.0",

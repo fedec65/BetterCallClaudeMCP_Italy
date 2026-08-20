@@ -19,6 +19,8 @@ COPY mcp-servers/giustizia-amministrativa/package*.json mcp-servers/giustizia-am
 COPY mcp-servers/giustizia-amministrativa/tsconfig.json mcp-servers/giustizia-amministrativa/
 COPY mcp-servers/cassazione/package*.json mcp-servers/cassazione/
 COPY mcp-servers/cassazione/tsconfig.json mcp-servers/cassazione/
+COPY mcp-servers/citation-verify-ita/package*.json mcp-servers/citation-verify-ita/
+COPY mcp-servers/citation-verify-ita/tsconfig.json mcp-servers/citation-verify-ita/
 COPY mcp-servers/eur-lex-ita/package*.json mcp-servers/eur-lex-ita/
 COPY mcp-servers/eur-lex-ita/tsconfig.json mcp-servers/eur-lex-ita/
 COPY mcp-servers/legal-citations-ita/package*.json mcp-servers/legal-citations-ita/
@@ -37,16 +39,15 @@ COPY mcp-servers/normattiva/src mcp-servers/normattiva/src
 COPY mcp-servers/corte-costituzionale/src mcp-servers/corte-costituzionale/src
 COPY mcp-servers/giustizia-amministrativa/src mcp-servers/giustizia-amministrativa/src
 COPY mcp-servers/cassazione/src mcp-servers/cassazione/src
+COPY mcp-servers/citation-verify-ita/src mcp-servers/citation-verify-ita/src
 COPY mcp-servers/eur-lex-ita/src mcp-servers/eur-lex-ita/src
 COPY mcp-servers/legal-citations-ita/src mcp-servers/legal-citations-ita/src
 COPY mcp-servers/legal-persona-ita/src mcp-servers/legal-persona-ita/src
 COPY mcp-servers-http/src mcp-servers-http/src
 
-# Build shared first (dependency of other workspaces)
-RUN npm run build --workspace=@bettercallclaude-italia/shared
-
-# Build all remaining workspaces
-RUN npm run build --workspaces
+# Build all workspaces (root script builds shared+normattiva+cassazione first,
+# required by cross-workspace subpath exports used by citation-verify-ita)
+RUN npm run build
 
 # Production stage
 FROM node:20-alpine
@@ -69,6 +70,8 @@ COPY --from=builder /app/mcp-servers/giustizia-amministrativa/dist mcp-servers/g
 COPY --from=builder /app/mcp-servers/giustizia-amministrativa/package.json mcp-servers/giustizia-amministrativa/
 COPY --from=builder /app/mcp-servers/cassazione/dist mcp-servers/cassazione/dist
 COPY --from=builder /app/mcp-servers/cassazione/package.json mcp-servers/cassazione/
+COPY --from=builder /app/mcp-servers/citation-verify-ita/dist mcp-servers/citation-verify-ita/dist
+COPY --from=builder /app/mcp-servers/citation-verify-ita/package.json mcp-servers/citation-verify-ita/
 COPY --from=builder /app/mcp-servers/eur-lex-ita/dist mcp-servers/eur-lex-ita/dist
 COPY --from=builder /app/mcp-servers/eur-lex-ita/package.json mcp-servers/eur-lex-ita/
 COPY --from=builder /app/mcp-servers/legal-citations-ita/dist mcp-servers/legal-citations-ita/dist

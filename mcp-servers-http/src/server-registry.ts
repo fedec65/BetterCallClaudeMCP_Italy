@@ -60,3 +60,6 @@ registerServer('legal-citations-ita', 'legal-citations-ita', 'Validazione citazi
 
 import { createLegalPersonaItaServer } from '@bettercallclaude-italia/legal-persona-ita';
 registerServer('legal-persona-ita', 'legal-persona-ita', 'Drafting documenti giuridici italiani', createLegalPersonaItaServer);
+
+import { createCitationVerifyItaServer } from '@bettercallclaude-italia/citation-verify-ita';
+registerServer('citation-verify-ita', 'citation-verify-ita', 'Verifica esistenza citazioni giuridiche italiane', createCitationVerifyItaServer);

@@ -24,7 +24,8 @@ https://mcp-italia.bettercallclaude.ch
 | `cassazione` | Giurisprudenza Corte di Cassazione (via ItalGiure Solr) | `/cassazione/mcp` |
 | `eur-lex-ita` | Diritto UE in lingua italiana | `/eur-lex-ita/mcp` |
 | `legal-citations-ita` | Validazione citazioni normative italiane | `/legal-citations-ita/mcp` |
-| `legal-persona-ita` | Drafting documenti giuridici italiani | `/legal-persona-ita/mcp` |
+| `legal-persona-ita` | Drafting documenti giuridici italiani + calcolo termini processuali | `/legal-persona-ita/mcp` |
+| `citation-verify-ita` | Verifica esistenza citazioni giuridiche | `/citation-verify-ita/mcp` |
 
 ### Note sui server
 
@@ -80,7 +81,8 @@ Aggiungi al tuo `.mcp.json`:
     "cassazione": { "type": "http", "url": "https://mcp-italia.bettercallclaude.ch/cassazione/mcp" },
     "eur-lex-ita": { "type": "http", "url": "https://mcp-italia.bettercallclaude.ch/eur-lex-ita/mcp" },
     "legal-citations-ita": { "type": "http", "url": "https://mcp-italia.bettercallclaude.ch/legal-citations-ita/mcp" },
-    "legal-persona-ita": { "type": "http", "url": "https://mcp-italia.bettercallclaude.ch/legal-persona-ita/mcp" }
+    "legal-persona-ita": { "type": "http", "url": "https://mcp-italia.bettercallclaude.ch/legal-persona-ita/mcp" },
+    "citation-verify-ita": { "type": "http", "url": "https://mcp-italia.bettercallclaude.ch/citation-verify-ita/mcp" }
   }
 }
 ```
@@ -126,6 +128,7 @@ mcp-servers/
 ├── corte-costituzionale/
 ├── giustizia-amministrativa/
 ├── cassazione/
+├── citation-verify-ita/
 ├── eur-lex-ita/
 ├── legal-citations-ita/
 ├── legal-persona-ita/
