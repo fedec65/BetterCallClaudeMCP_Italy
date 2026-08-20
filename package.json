@@ -9,7 +9,7 @@
     "mcp-servers-http"
   ],
   "scripts": {
-    "build": "npm run build --workspaces",
+    "build": "npm run build --workspace=@bettercallclaude-italia/shared --workspace=@bettercallclaude-italia/normattiva --workspace=@bettercallclaude-italia/cassazione && npm run build --workspaces",
     "dev": "npm run dev --workspaces --if-present",
     "start": "node mcp-servers-http/dist/index.js",
     "typecheck": "npm run typecheck --workspaces",
