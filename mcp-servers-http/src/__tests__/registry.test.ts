@@ -2,11 +2,12 @@ import { describe, it, expect } from 'vitest';
 import { listServers, hasServer, getServerFactory } from '../server-registry.js';
 
 describe('Server Registry', () => {
-  it('lists all 7 servers', () => {
+  it('lists all 8 servers', () => {
     const servers = listServers();
-    expect(servers.length).toBe(7);
+    expect(servers.length).toBe(8);
     expect(servers.map((s) => s.name)).toContain('normattiva');
     expect(servers.map((s) => s.name)).toContain('eur-lex-ita');
+    expect(servers.map((s) => s.name)).toContain('citation-verify-ita');
   });
 
   it('has normattiva server', () => {

@@ -16,7 +16,7 @@ const tools: Tool[] = [
     name: 'cassazione_search_massime',
     description: `Ricerca sentenze e massime della Corte di Cassazione tramite API Solr di ItalGiure (CED Ministero della Giustizia).
 
-🔐 AUTENTICAZIONE: richiede un cookie di sessione ItalGiure attivo. Configura la variabile d'ambiente ITALGIURE_COOKIE oppure salva il cookie in un file italgiure_cookie.txt nella working directory. Per ottenere il cookie: accedi a https://www.italgiure.giustizia.it/sncass/ con SPID o credenziali professionali, poi esegui document.cookie nel browser.
+🔐 AUTENTICAZIONE: richiede un cookie di sessione ItalGiure attivo. Puoi passare il cookie come parametro MCP (opzionale) oppure configurarlo come variabile d'ambiente ITALGIURE_COOKIE o file italgiure_cookie.txt. Per ottenere il cookie: accedi a https://www.italgiure.giustizia.it/sncass/ con SPID o credenziali professionali, poi esegui document.cookie nel browser.
 
 Parametri:
 - query (obbligatorio): parole chiave o sintassi Solr (es. "responsabilita medica")
@@ -25,6 +25,7 @@ Parametri:
 - tipo (opzionale): "sentenza", "ordinanza" o "decreto"
 - page (opzionale): numero pagina (default 1)
 - pageSize (opzionale): risultati per pagina, max 50 (default 20)
+- cookie (opzionale): cookie di sessione ItalGiure
 
 Se il cookie non è configurato o scaduto, il tool restituisce URL di fallback (ItalGiure, Google, DuckDuckGo, ECLI) e istruzioni per aggiornare la sessione.`,
     inputSchema: {
@@ -36,6 +37,7 @@ Se il cookie non è configurato o scaduto, il tool restituisce URL di fallback (
         tipo: { type: 'string', enum: ['sentenza', 'ordinanza', 'decreto'], description: 'Tipo di provvedimento' },
         page: { type: 'number', minimum: 1, description: 'Numero pagina' },
         pageSize: { type: 'number', minimum: 1, maximum: 50, description: 'Risultati per pagina' },
+        cookie: { type: 'string', description: 'Cookie di sessione ItalGiure' },
       },
       required: ['query'],
     },
@@ -44,16 +46,18 @@ Se il cookie non è configurato o scaduto, il tool restituisce URL di fallback (
     name: 'cassazione_get_sentenza',
     description: `Recupera i metadati di una singola sentenza della Corte di Cassazione tramite ItalGiure.
 
-🔐 AUTENTICAZIONE: richiede cookie di sessione ItalGiure (ITALGIURE_COOKIE o italgiure_cookie.txt).
+🔐 AUTENTICAZIONE: richiede cookie di sessione ItalGiure. Puoi passarlo come parametro MCP (opzionale) o configurarlo come ITALGIURE_COOKIE / italgiure_cookie.txt.
 
 Parametri:
 - id (obbligatorio): identificativo sentenza (es. snciv2024332127S)
+- cookie (opzionale): cookie di sessione ItalGiure
 
 Restituisce estremi, sezione, tipo, date e URL al PDF quando disponibili. Se il cookie manca o scade, restituisce istruzioni di autenticazione e URL di fallback.`,
     inputSchema: {
       type: 'object',
       properties: {
         id: { type: 'string', description: 'Identificativo sentenza' },
+        cookie: { type: 'string', description: 'Cookie di sessione ItalGiure' },
       },
       required: ['id'],
     },

@@ -60,6 +60,7 @@ L'aggregatore in `mcp-servers-http/src/server-registry.ts` importa la factory di
 | eur-lex-ita | eur-lex.europa.eu | Open + API + SPARQL | ✅ Alta |
 | legal-citations-ita | Logica interna | — | ✅ Alta |
 | legal-persona-ita | Logica interna | — | ✅ Alta |
+| citation-verify-ita | ItalGiure Solr (giurisprudenza) + Normattiva (legislazione) | Orchestrazione fonti esistenti | ⚠️ Media (eredita dai server sottostanti) |
 
 ### Strategia di accesso dati
 
