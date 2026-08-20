@@ -1,7 +1,7 @@
 {
-  "name": "@bettercallclaude-italia/normattiva",
-  "version": "1.0.1",
-  "description": "MCP server for Italian legislation via Normattiva Open Data API",
+  "name": "@bettercallclaude-italia/citation-verify-ita",
+  "version": "1.0.0",
+  "description": "MCP server for verifying Italian legal citations against Cassazione and Normattiva data sources",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -15,12 +15,13 @@
   "keywords": [
     "mcp",
     "italian-law",
-    "normattiva",
-    "legislation"
+    "citation-verification"
   ],
   "author": "BetterCallClaude Associazione",
   "license": "AGPL-3.0-or-later",
   "dependencies": {
+    "@bettercallclaude-italia/cassazione": "^1.0.1",
+    "@bettercallclaude-italia/normattiva": "^1.0.1",
     "@bettercallclaude-italia/shared": "^1.0.0",
     "@modelcontextprotocol/sdk": "^1.12.0",
     "zod": "^3.23.0"
@@ -37,18 +38,6 @@
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
-    },
-    "./search": {
-      "types": "./dist/tools/search.d.ts",
-      "import": "./dist/tools/search.js"
-    },
-    "./search-advanced": {
-      "types": "./dist/tools/search-advanced.d.ts",
-      "import": "./dist/tools/search-advanced.js"
-    },
-    "./types": {
-      "types": "./dist/types.d.ts",
-      "import": "./dist/types.js"
     }
   }
 }
