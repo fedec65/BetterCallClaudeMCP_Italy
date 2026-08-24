@@ -58,26 +58,30 @@ export interface SessionStatus {
 const SCRYPT_SALT_LEGACY = 'bcc-italgiure-session-vault';
 
 // Throttle anti brute-force sulle miss del vault (session_key inesistenti):
-// max 20 miss process-wide al minuto. Le passphrase >= 16 caratteri rendono
-// gia' impraticabile l'enumerazione; questo e' difesa in profondita'.
+// max 20 miss process-wide al minuto. Il controllo scatta SOLO sulle miss:
+// chi possiede una session_key valida non viene mai bloccato, cosi un attacco
+// di enumerazione non puo' negare il servizio agli altri utenti (no DoS).
+// Le passphrase >= 16 caratteri rendono gia' impraticabile l'enumerazione;
+// questo e' difesa in profondita'.
 const MISS_WINDOW_MS = 60_000;
 const MISS_LIMIT = 20;
 const missTimestamps: number[] = [];
 
-function assertNotThrottled(): void {
+/**
+ * Registra una miss e lancia se oltre il limite nella finestra.
+ * Va chiamata solo quando la session_key NON esiste nel vault.
+ */
+function recordMiss(): void {
   const now = Date.now();
+  missTimestamps.push(now);
   while (missTimestamps.length > 0 && now - (missTimestamps[0] as number) > MISS_WINDOW_MS) {
     missTimestamps.shift();
   }
-  if (missTimestamps.length >= MISS_LIMIT) {
+  if (missTimestamps.length > MISS_LIMIT) {
     throw new Error(
       'Troppi tentativi di accesso al session vault. Riprova tra un minuto.'
     );
   }
-}
-
-function recordMiss(): void {
-  missTimestamps.push(Date.now());
 }
 
 /** Azzera il contatore delle miss. Solo per i test. */
@@ -160,7 +164,6 @@ function saveVault(vault: VaultFile): void {
 
 /** Salva o aggiorna il cookie per una session_key. */
 export function setSession(sessionKey: string, cookie: string): void {
-  assertNotThrottled();
   const vault = loadVault();
   vault.entries[keyHash(sessionKey)] = {
     ...encrypt(cookie.trim()),
@@ -175,7 +178,6 @@ export function setSession(sessionKey: string, cookie: string): void {
  * Restituisce undefined se assente o marcata scaduta dal keep-alive.
  */
 export function getSessionCookie(sessionKey: string): string | undefined {
-  assertNotThrottled();
   const entry = loadVault().entries[keyHash(sessionKey)];
   if (!entry) {
     recordMiss();
@@ -191,7 +193,6 @@ export function getSessionCookie(sessionKey: string): string | undefined {
 
 /** Stato della sessione senza esporre il cookie. */
 export function getSessionStatus(sessionKey: string): SessionStatus {
-  assertNotThrottled();
   const entry = loadVault().entries[keyHash(sessionKey)];
   if (!entry) {
     recordMiss();
@@ -207,7 +208,6 @@ export function getSessionStatus(sessionKey: string): SessionStatus {
 
 /** Elimina la sessione. Restituisce true se esisteva. */
 export function deleteSession(sessionKey: string): boolean {
-  assertNotThrottled();
   const vault = loadVault();
   const hash = keyHash(sessionKey);
   if (!vault.entries[hash]) {

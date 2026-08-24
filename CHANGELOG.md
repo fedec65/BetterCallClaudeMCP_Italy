@@ -5,6 +5,12 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 Il formato è basato su [Keep a Changelog](https://keepachangelog.com/it/1.0.0/),
 e questo progetto aderisce a [Semantic Versioning](https://semver.org/lang/it/).
 
+## [1.1.2] - 2026-08-24
+
+### Corretto
+
+- **Throttle vault solo sulle miss** — Il controllo anti brute-force ora scatta solo quando la `session_key` non esiste: chi possiede una chiave valida non viene più bloccato quando il limite (20 miss/min) è raggiunto, eliminando il vettore di DoS verso gli altri utenti segnalato in review.
+
 ## [1.1.1] - 2026-08-24
 
 Patch di sicurezza e robustezza a seguito della review automatizzata della 1.1.0.
