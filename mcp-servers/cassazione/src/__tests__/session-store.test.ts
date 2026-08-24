@@ -104,3 +104,14 @@ describe('getItalgiureCookie con session_key', () => {
     expect(getItalgiureCookie('DIRECT=1', KEY)).toBe('DIRECT=1');
   });
 });
+
+describe('throttle anti brute-force', () => {
+  it('dopo 20 miss consecutive le letture del vault vengono bloccate', () => {
+    store.resetMissCounterForTests();
+    for (let i = 0; i < 20; i++) {
+      expect(store.getSessionStatus(`chiave-inesistente-${i}`).presente).toBe(false);
+    }
+    expect(() => store.getSessionStatus('chiave-inesistente-21')).toThrow(/Troppi tentativi/);
+    store.resetMissCounterForTests();
+  });
+});

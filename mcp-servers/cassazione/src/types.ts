@@ -22,14 +22,14 @@ export const GetSentenzaInputSchema = z.object({
 export type GetSentenzaInput = z.infer<typeof GetSentenzaInputSchema>;
 
 export const SessionSetInputSchema = z.object({
-  session_key: z.string().min(8).describe('Passphrase scelta dall\'utente (min 8 caratteri): identifica la sessione; non viene mai salvata in chiaro'),
+  session_key: z.string().min(16).describe('Passphrase scelta dall\'utente (min 16 caratteri): identifica la sessione; non viene mai salvata in chiaro'),
   cookie: z.string().min(1).describe('Cookie di sessione ItalGiure da registrare (cifrato AES-256-GCM a riposo)'),
 });
 
 export type SessionSetInput = z.infer<typeof SessionSetInputSchema>;
 
 export const SessionKeyInputSchema = z.object({
-  session_key: z.string().min(8).describe('Passphrase della sessione registrata'),
+  session_key: z.string().min(16).describe('Passphrase della sessione registrata (min 16 caratteri)'),
 });
 
 export type SessionKeyInput = z.infer<typeof SessionKeyInputSchema>;

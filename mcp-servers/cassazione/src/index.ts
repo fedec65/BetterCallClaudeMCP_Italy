@@ -70,7 +70,7 @@ Restituisce estremi, sezione, tipo, date e URL al PDF quando disponibili. Se il 
   },
   {
     name: 'cassazione_session_set',
-    description: `Registra il cookie di sessione ItalGiure nel vault lato server, associandolo a una session_key (passphrase min 8 caratteri scelta dall'utente).
+    description: `Registra il cookie di sessione ItalGiure nel vault lato server, associandolo a una session_key (passphrase min 16 caratteri scelta dall'utente).
 
 Dopo la registrazione, i tool cassazione_search_massime e cassazione_get_sentenza possono usare session_key al posto del cookie. Il cookie e cifrato AES-256-GCM a riposo e la session_key non viene mai salvata in chiaro (solo hash SHA-256). Un keep-alive ogni 6 ore mantiene la sessione viva e ne segnala la scadenza.
 
@@ -80,7 +80,7 @@ Parametri:
     inputSchema: {
       type: 'object',
       properties: {
-        session_key: { type: 'string', minLength: 8, description: 'Passphrase della sessione (min 8 caratteri)' },
+        session_key: { type: 'string', minLength: 16, description: 'Passphrase della sessione (min 16 caratteri)' },
         cookie: { type: 'string', description: 'Cookie di sessione ItalGiure' },
       },
       required: ['session_key', 'cookie'],
@@ -95,7 +95,7 @@ Parametri:
     inputSchema: {
       type: 'object',
       properties: {
-        session_key: { type: 'string', minLength: 8, description: 'Passphrase della sessione' },
+        session_key: { type: 'string', minLength: 16, description: 'Passphrase della sessione' },
       },
       required: ['session_key'],
     },
@@ -109,7 +109,7 @@ Parametri:
     inputSchema: {
       type: 'object',
       properties: {
-        session_key: { type: 'string', minLength: 8, description: 'Passphrase della sessione' },
+        session_key: { type: 'string', minLength: 16, description: 'Passphrase della sessione' },
       },
       required: ['session_key'],
     },

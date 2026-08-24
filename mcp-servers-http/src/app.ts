@@ -3,9 +3,23 @@ import helmet from 'helmet';
 import cors from 'cors';
 import { rateLimit } from 'express-rate-limit';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
+import { readFileSync } from 'node:fs';
 import { getServerFactory, listServers } from './server-registry.js';
 
 const app = express();
+
+// Versione letta dal package.json del package (dist/app.js -> ../package.json):
+// evita versioni hardcoded che restano stale dopo un bump.
+const PACKAGE_VERSION = ((): string => {
+  try {
+    const pkg = JSON.parse(
+      readFileSync(new URL('../package.json', import.meta.url), 'utf-8')
+    ) as { version?: string };
+    return pkg.version ?? '0.0.0';
+  } catch {
+    return '0.0.0';
+  }
+})();
 
 // Railway instrada tramite un solo proxy edge: senza trust proxy req.ip e
 // sempre l'IP dell'edge e il rate limiter conterebbe tutti gli utenti in un
@@ -130,7 +144,7 @@ app.get('/', (_req: Request, res: Response) => {
   const servers = listServers();
   res.json({
     name: 'BetterCallClaude Italia MCP Aggregator',
-    version: '1.0.0',
+    version: PACKAGE_VERSION,
     description: 'Aggregatore HTTP per i server MCP del diritto italiano',
     endpoint_pattern: '/<server>/mcp',
     servers: servers.map((s) => ({

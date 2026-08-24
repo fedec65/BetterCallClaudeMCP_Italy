@@ -10,7 +10,9 @@
  * - Le entry sono indicizzate per SHA-256(session_key): la chiave non e mai
  *   salvata in chiaro.
  * - Il cookie e cifrato AES-256-GCM con chiave derivata (scrypt) da
- *   SESSION_STORE_SECRET.
+ *   SESSION_STORE_SECRET + salt casuale per-entry.
+ * - Le miss (session_key inesistenti) sono throttled: max 20/min process-wide,
+ *   come difesa in profondita' contro l'enumerazione delle passphrase.
  * - Il vault e DISABILITATO se SESSION_STORE_SECRET non e configurata: i tool
  *   session_* rispondono con errore esplicito.
  *
@@ -34,6 +36,8 @@ interface EncryptedEntry {
   iv: string;
   authTag: string;
   data: string;
+  /** Salt scrypt per-entry (base64). Assente solo nelle entry legacy. */
+  salt?: string;
   createdAt: string;
   lastKeepAlive?: string;
   stato: SessionStato;
@@ -51,7 +55,35 @@ export interface SessionStatus {
   lastKeepAlive?: string;
 }
 
-const SCRYPT_SALT = 'bcc-italgiure-session-vault';
+const SCRYPT_SALT_LEGACY = 'bcc-italgiure-session-vault';
+
+// Throttle anti brute-force sulle miss del vault (session_key inesistenti):
+// max 20 miss process-wide al minuto. Le passphrase >= 16 caratteri rendono
+// gia' impraticabile l'enumerazione; questo e' difesa in profondita'.
+const MISS_WINDOW_MS = 60_000;
+const MISS_LIMIT = 20;
+const missTimestamps: number[] = [];
+
+function assertNotThrottled(): void {
+  const now = Date.now();
+  while (missTimestamps.length > 0 && now - (missTimestamps[0] as number) > MISS_WINDOW_MS) {
+    missTimestamps.shift();
+  }
+  if (missTimestamps.length >= MISS_LIMIT) {
+    throw new Error(
+      'Troppi tentativi di accesso al session vault. Riprova tra un minuto.'
+    );
+  }
+}
+
+function recordMiss(): void {
+  missTimestamps.push(Date.now());
+}
+
+/** Azzera il contatore delle miss. Solo per i test. */
+export function resetMissCounterForTests(): void {
+  missTimestamps.length = 0;
+}
 
 function storeSecret(): string | undefined {
   const secret = process.env.SESSION_STORE_SECRET;
@@ -63,8 +95,8 @@ export function isSessionStoreEnabled(): boolean {
   return !!storeSecret();
 }
 
-function encryptionKey(): Buffer {
-  return scryptSync(storeSecret() as string, SCRYPT_SALT, 32);
+function encryptionKey(salt: string): Buffer {
+  return scryptSync(storeSecret() as string, salt, 32);
 }
 
 function storePath(): string {
@@ -77,21 +109,24 @@ function keyHash(sessionKey: string): string {
   return createHash('sha256').update(sessionKey, 'utf-8').digest('hex');
 }
 
-function encrypt(plain: string): { iv: string; authTag: string; data: string } {
+function encrypt(plain: string): { iv: string; authTag: string; data: string; salt: string } {
   const iv = randomBytes(12);
-  const cipher = createCipheriv('aes-256-gcm', encryptionKey(), iv);
+  const salt = randomBytes(16).toString('base64');
+  const cipher = createCipheriv('aes-256-gcm', encryptionKey(salt), iv);
   const data = Buffer.concat([cipher.update(plain, 'utf-8'), cipher.final()]);
   return {
     iv: iv.toString('base64'),
     authTag: cipher.getAuthTag().toString('base64'),
     data: data.toString('base64'),
+    salt,
   };
 }
 
 function decrypt(entry: EncryptedEntry): string {
   const decipher = createDecipheriv(
     'aes-256-gcm',
-    encryptionKey(),
+    // Entry legacy (senza salt per-entry): deriva con il salt storico.
+    encryptionKey(entry.salt ?? SCRYPT_SALT_LEGACY),
     Buffer.from(entry.iv, 'base64')
   );
   decipher.setAuthTag(Buffer.from(entry.authTag, 'base64'));
@@ -125,6 +160,7 @@ function saveVault(vault: VaultFile): void {
 
 /** Salva o aggiorna il cookie per una session_key. */
 export function setSession(sessionKey: string, cookie: string): void {
+  assertNotThrottled();
   const vault = loadVault();
   vault.entries[keyHash(sessionKey)] = {
     ...encrypt(cookie.trim()),
@@ -139,8 +175,13 @@ export function setSession(sessionKey: string, cookie: string): void {
  * Restituisce undefined se assente o marcata scaduta dal keep-alive.
  */
 export function getSessionCookie(sessionKey: string): string | undefined {
+  assertNotThrottled();
   const entry = loadVault().entries[keyHash(sessionKey)];
-  if (!entry || entry.stato !== 'attiva') return undefined;
+  if (!entry) {
+    recordMiss();
+    return undefined;
+  }
+  if (entry.stato !== 'attiva') return undefined;
   try {
     return decrypt(entry);
   } catch {
@@ -150,8 +191,12 @@ export function getSessionCookie(sessionKey: string): string | undefined {
 
 /** Stato della sessione senza esporre il cookie. */
 export function getSessionStatus(sessionKey: string): SessionStatus {
+  assertNotThrottled();
   const entry = loadVault().entries[keyHash(sessionKey)];
-  if (!entry) return { presente: false };
+  if (!entry) {
+    recordMiss();
+    return { presente: false };
+  }
   return {
     presente: true,
     stato: entry.stato,
@@ -162,9 +207,13 @@ export function getSessionStatus(sessionKey: string): SessionStatus {
 
 /** Elimina la sessione. Restituisce true se esisteva. */
 export function deleteSession(sessionKey: string): boolean {
+  assertNotThrottled();
   const vault = loadVault();
   const hash = keyHash(sessionKey);
-  if (!vault.entries[hash]) return false;
+  if (!vault.entries[hash]) {
+    recordMiss();
+    return false;
+  }
   delete vault.entries[hash];
   saveVault(vault);
   return true;

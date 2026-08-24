@@ -72,7 +72,7 @@ Senza il cookie configurato, il connettore **funziona comunque** ma con capacit�
 
 Ogni utente può registrare il **proprio** cookie sul server una volta sola, invece di passarlo a ogni chiamata:
 
-- `cassazione_session_set(session_key, cookie)` — registra il cookie associato a una passphrase (`session_key`, min 8 caratteri). Il cookie è cifrato AES-256-GCM a riposo; la passphrase è salvata solo come hash SHA-256.
+- `cassazione_session_set(session_key, cookie)` — registra il cookie associato a una passphrase (`session_key`, min 16 caratteri). Il cookie è cifrato AES-256-GCM a riposo; la passphrase è salvata solo come hash SHA-256.
 - `cassazione_session_status(session_key)` — stato della sessione (attiva/scaduta, ultimo keep-alive), senza esporre il cookie.
 - `cassazione_session_delete(session_key)` — elimina la sessione.
 - I tool `cassazione_search_massime` e `cassazione_get_sentenza` accettano il parametro `session_key` in alternativa a `cookie` (priorità: `cookie` > `session_key` > `ITALGIURE_COOKIE` > file).
