@@ -106,12 +106,17 @@ describe('getItalgiureCookie con session_key', () => {
 });
 
 describe('throttle anti brute-force', () => {
-  it('dopo 20 miss consecutive le letture del vault vengono bloccate', () => {
+  it('dopo 20 miss consecutive le miss vengono bloccate, ma le chiavi valide no', () => {
     store.resetMissCounterForTests();
+    store.setSession(KEY, COOKIE);
     for (let i = 0; i < 20; i++) {
       expect(store.getSessionStatus(`chiave-inesistente-${i}`).presente).toBe(false);
     }
+    // La 21esima miss supera il limite e lancia
     expect(() => store.getSessionStatus('chiave-inesistente-21')).toThrow(/Troppi tentativi/);
+    // Ma una session_key valida non viene mai bloccata (no DoS verso gli utenti)
+    expect(store.getSessionCookie(KEY)).toBe(COOKIE);
+    expect(store.getSessionStatus(KEY).presente).toBe(true);
     store.resetMissCounterForTests();
   });
 });
