@@ -5,6 +5,21 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 Il formato è basato su [Keep a Changelog](https://keepachangelog.com/it/1.0.0/),
 e questo progetto aderisce a [Semantic Versioning](https://semver.org/lang/it/).
 
+## [1.1.1] - 2026-08-24
+
+Patch di sicurezza e robustezza a seguito della review automatizzata della 1.1.0.
+
+### Corretto
+
+- **Keep-alive conforme alla regola 8** — La query Solr del keep-alive ora passa da `fetchWithRetry` (rate limiter condiviso) con `retries: 1`: i 4xx non vengono ritentati e il rilevamento 401/403 resta invariato.
+- **Versione endpoint `/`** — Non più hardcoded: letta dal `package.json` del package `mcp-servers-http`.
+
+### Sicurezza
+
+- **Salt scrypt per-entry** — La chiave AES-256-GCM è ora derivata da `SESSION_STORE_SECRET` + salt casuale per entry (le entry legacy senza salt restano leggibili via fallback al salt storico).
+- **Passphrase min 16 caratteri** — `session_key` minima portata da 8 a 16 caratteri negli schemi dei tool `session_*`.
+- **Throttle anti brute-force** — Le miss del vault (session_key inesistenti) sono limitate a 20/min process-wide con errore esplicito.
+
 ## [1.1.0] - 2026-08-24
 
 ### Aggiunto

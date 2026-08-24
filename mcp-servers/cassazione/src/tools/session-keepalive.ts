@@ -10,6 +10,7 @@
  * server per richiesta, quindi l'intervallo va avviato una sola volta.
  */
 
+import { fetchWithRetry } from '@bettercallclaude-italia/shared';
 import { createItalgiureClient, SOLR_ENDPOINT } from './italgiure-client.js';
 import { isSessionStoreEnabled, listActiveSessions, recordKeepAlive } from './session-store.js';
 
@@ -32,13 +33,18 @@ export async function keepAliveAll(): Promise<number> {
 
   for (const { hash, cookie } of sessions) {
     try {
-      await client.post(SOLR_ENDPOINT, new URLSearchParams({
+      // fetchWithRetry (regola 8): passa dal rate limiter condiviso. Un solo
+      // retry: i fallimenti transitori non devono marcare la sessione scaduta,
+      // e il giro successivo (6h) riprova comunque. I 401/403 non vengono
+      // ritentati da fetchWithRetry (shouldRetry esclude i 4xx) e arrivano
+      // come AxiosError con response.status intatto.
+      await fetchWithRetry('cassazione', () => client.post(SOLR_ENDPOINT, new URLSearchParams({
         q: 'kind:"snciv"',
         rows: '0',
         wt: 'json',
       }), {
         headers: { Cookie: cookie },
-      });
+      }), { retries: 1 });
       recordKeepAlive(hash, false);
     } catch (error) {
       const status = (error as { response?: { status?: number } })?.response?.status;
