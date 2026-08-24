@@ -2,17 +2,24 @@ import { createHttpClient, fetchWithRetry, parseApiError, buildSearchEngineUrls,
 import type { SearchMassimeInput } from '../types.js';
 import { readFileSync, existsSync } from 'fs';
 import { resolve } from 'path';
+import { getSessionCookie } from './session-store.js';
 
 const ITALGIURE_BASE = 'https://www.italgiure.giustizia.it/sncass';
-const SOLR_ENDPOINT = `${ITALGIURE_BASE}/isapi/hc.dll/sn.solr/sn-collection/select?app.query`;
+export const SOLR_ENDPOINT = `${ITALGIURE_BASE}/isapi/hc.dll/sn.solr/sn-collection/select?app.query`;
 
 /**
- * Legge il cookie di sessione ItalGiure da parametro, env var o file locale.
- * Priorita': parametro > env var > file locale.
+ * Legge il cookie di sessione ItalGiure da parametro, vault sessioni,
+ * env var o file locale.
+ * Priorita': parametro > session vault (session_key) > env var > file locale.
  */
-export function getItalgiureCookie(paramCookie?: string): string | undefined {
+export function getItalgiureCookie(paramCookie?: string, sessionKey?: string): string | undefined {
   if (paramCookie && paramCookie.trim()) {
     return paramCookie.trim();
+  }
+
+  if (sessionKey && sessionKey.trim()) {
+    const fromVault = getSessionCookie(sessionKey.trim());
+    if (fromVault) return fromVault;
   }
 
   const envCookie = process.env.ITALGIURE_COOKIE;
@@ -40,7 +47,7 @@ export function isItalgiureConfigured(paramCookie?: string): boolean {
 /**
  * Crea un client HTTP per ItalGiure con SSL bypass per la CA non standard.
  */
-function createItalgiureClient() {
+export function createItalgiureClient() {
   return createHttpClient({
     baseURL: ITALGIURE_BASE,
     timeout: 30000,
@@ -159,7 +166,7 @@ export async function searchItalgiure(input: SearchMassimeInput): Promise<{
     istruzioni: string;
   };
 }> {
-  const cookie = getItalgiureCookie(input.cookie);
+  const cookie = getItalgiureCookie(input.cookie, input.session_key);
   const q = buildSolrQuery(input);
   const rows = input.pageSize ?? 20;
   const start = calculateStart(input.page, input.pageSize);
@@ -279,7 +286,7 @@ export async function searchItalgiure(input: SearchMassimeInput): Promise<{
 /**
  * Recupera una singola sentenza da ItalGiure per ID.
  */
-export async function getSentenzaItalgiure(id: string, paramCookie?: string): Promise<{
+export async function getSentenzaItalgiure(id: string, paramCookie?: string, sessionKey?: string): Promise<{
   success: true;
   cookieValido: true;
   sentenza: {
@@ -304,7 +311,7 @@ export async function getSentenzaItalgiure(id: string, paramCookie?: string): Pr
     istruzioni: string;
   };
 }> {
-  const cookie = getItalgiureCookie(paramCookie);
+  const cookie = getItalgiureCookie(paramCookie, sessionKey);
 
   if (!cookie) {
     return {
