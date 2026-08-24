@@ -5,7 +5,17 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 Il formato è basato su [Keep a Changelog](https://keepachangelog.com/it/1.0.0/),
 e questo progetto aderisce a [Semantic Versioning](https://semver.org/lang/it/).
 
-## [Unreleased]
+## [1.1.0] - 2026-08-24
+
+### Aggiunto
+
+- **Session vault ItalGiure (server `cassazione`)** — Nuovi tool `cassazione_session_set` / `cassazione_session_status` / `cassazione_session_delete`: ogni utente registra il proprio cookie una volta sola associandolo a una `session_key` (passphrase). Cookie cifrato AES-256-GCM a riposo, passphrase salvata solo come hash SHA-256. I tool `cassazione_search_massime` e `cassazione_get_sentenza` accettano il nuovo parametro opzionale `session_key` (priorità: `cookie` > `session_key` > `ITALGIURE_COOKIE` > file).
+- **Keep-alive sessioni** — Ogni 6 ore una query Solr leggera per ciascun cookie registrato: mantiene vive le sessioni (sliding expiration) e marca `scaduta` su 401/403. Richiede `SESSION_STORE_SECRET` (e consigliato `SESSION_STORE_PATH` su volume Railway).
+
+### Corretto
+
+- **Rate limiter condiviso tra tutti gli utenti** (`mcp-servers-http`) — Mancava `app.set('trust proxy', 1)`: dietro il proxy Railway `req.ip` era sempre l'IP dell'edge e il bucket 30 req/15min era globale, causando 429 sistematici e il fallimento dell'handshake dei connettori Claude.ai (errore `ofid_...`). Ora il limite MCP è 300 req/15min **per IP utente**, i metodi di handshake/discovery (`initialize`, `tools/list`, `ping`, `notifications/*`) non consumano quota, e la rotta MCP è esclusa dal limiter generale. Limiti configurabili via `GENERAL_RATE_LIMIT_MAX` / `MCP_RATE_LIMIT_MAX`.
+- **CORS** — Aggiunta `https://claude.ai` alla whitelist delle origini.
 
 ### Migliorato
 

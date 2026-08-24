@@ -29,7 +29,7 @@ https://mcp-italia.bettercallclaude.ch
 
 ### Note sui server
 
-- **Rate limiting**: il gateway è pubblico ma protetto da rate-limiting per IP (100 req/15min generico, 30 req/15min su endpoint MCP). Se superi i limiti, riceverai `429 Too Many Requests`.
+- **Rate limiting**: il gateway è pubblico ma protetto da rate-limiting per IP (100 req/15min generico, 300 req/15min sulle chiamate tool MCP; i metodi di handshake/discovery — `initialize`, `tools/list`, `ping`, `notifications/*` — non contano ai fini del limite). Se superi i limiti, riceverai `429 Too Many Requests`. Limiti configurabili via env `GENERAL_RATE_LIMIT_MAX` e `MCP_RATE_LIMIT_MAX`.
 
 ### Cassazione — Setup cookie ItalGiure
 
@@ -67,6 +67,28 @@ Senza il cookie configurato, il connettore **funziona comunque** ma con capacit�
 - Il cookie di sessione ItalGiure ha durata limitata (tipicamente alcune ore)
 - Quando scade, il connettore rileva automaticamente l'invalidità e restituisce i fallback
 - Per un uso continuativo, il cookie deve essere rinnovato periodicamente
+
+#### Session vault per-utente (tool `cassazione_session_*`)
+
+Ogni utente può registrare il **proprio** cookie sul server una volta sola, invece di passarlo a ogni chiamata:
+
+- `cassazione_session_set(session_key, cookie)` — registra il cookie associato a una passphrase (`session_key`, min 8 caratteri). Il cookie è cifrato AES-256-GCM a riposo; la passphrase è salvata solo come hash SHA-256.
+- `cassazione_session_status(session_key)` — stato della sessione (attiva/scaduta, ultimo keep-alive), senza esporre il cookie.
+- `cassazione_session_delete(session_key)` — elimina la sessione.
+- I tool `cassazione_search_massime` e `cassazione_get_sentenza` accettano il parametro `session_key` in alternativa a `cookie` (priorità: `cookie` > `session_key` > `ITALGIURE_COOKIE` > file).
+
+Un **keep-alive ogni 6 ore** esegue una query leggera con ciascun cookie registrato: mantiene viva la sessione se ItalGiure usa scadenza sliding e marca `scaduta` la sessione su 401/403, così i tool guidano l'utente al rinnovo.
+
+Configurazione lato server (Railway):
+
+```bash
+SESSION_STORE_SECRET="<stringa casuale lunga>"   # obbligatoria: abilita il vault
+SESSION_STORE_PATH="/data/italgiure_sessions.json"  # consigliato: path su volume Railway
+```
+
+Senza `SESSION_STORE_SECRET` il vault è disabilitato e i tool `session_*` rispondono con errore esplicito.
+
+> Nota: l'automazione del login SPID non è possibile (presenza utente + 2FA, regole AGID). Il vault con keep-alive è l'approssimazione supportata della "sessione persistente".
 
 ## Configurazione plugin BetterCallClaude
 
