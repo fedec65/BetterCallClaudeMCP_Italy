@@ -63,3 +63,6 @@ registerServer('legal-persona-ita', 'legal-persona-ita', 'Drafting documenti giu
 
 import { createCitationVerifyItaServer } from '@bettercallclaude-italia/citation-verify-ita';
 registerServer('citation-verify-ita', 'citation-verify-ita', 'Verifica esistenza citazioni giuridiche italiane', createCitationVerifyItaServer);
+
+import { createWorkflowsItaServer } from '@bettercallclaude-italia/workflows';
+registerServer('workflows-ita', 'workflows-ita', 'Workflow legali personalizzati riutilizzabili', createWorkflowsItaServer);
