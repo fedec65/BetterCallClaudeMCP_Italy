@@ -16,6 +16,7 @@ Quick reference per agenti di coding che lavorano su questo repository.
 
 1. **Import extensions:** `import { foo } from './bar.js'` (anche per file `.ts`)
 2. **Naming tool:** `<server>_<azione>` (es. `normattiva_search`, `normattiva_get_atto`)
+   - **Eccezione documentata:** i tool di `workflows-ita` (`list_agents`, `validate_pipeline`, `save_workflow`, `list_workflows`, `get_workflow`, `delete_workflow`, `claim_user_id`, `log_run`) non hanno prefisso, per parità di contratto col server svizzero `workflows-ch` e con i comandi del plugin che li invocano. Nessun rischio di collisione: lato client i tool sono sempre namespacati (`mcp__plugin_bettercallclaude-italia_workflows-ita__*`). Per lo stesso motivo di parità, `workflows-ita` è esente dalle regole 3–4 (envelope): risponde con JSON libero + `isError`, e `WorkflowValidationError` → `{valid:false, errors}`.
 3. **Risposte MCP:** JSON stringify con envelope `{ success, data, metadata }` o `{ success, error, metadata }`
 4. **Metadata:** `requestId`, `timestamp`, `tool`, `processingTime`, `cached`
 5. **Lingua:** descrizioni tool ed errori user-facing in **italiano**
