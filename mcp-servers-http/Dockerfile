@@ -27,6 +27,8 @@ COPY mcp-servers/legal-citations-ita/package*.json mcp-servers/legal-citations-i
 COPY mcp-servers/legal-citations-ita/tsconfig.json mcp-servers/legal-citations-ita/
 COPY mcp-servers/legal-persona-ita/package*.json mcp-servers/legal-persona-ita/
 COPY mcp-servers/legal-persona-ita/tsconfig.json mcp-servers/legal-persona-ita/
+COPY mcp-servers/workflows/package*.json mcp-servers/workflows/
+COPY mcp-servers/workflows/tsconfig.json mcp-servers/workflows/
 COPY mcp-servers-http/package*.json mcp-servers-http/
 COPY mcp-servers-http/tsconfig.json mcp-servers-http/
 
@@ -43,6 +45,7 @@ COPY mcp-servers/citation-verify-ita/src mcp-servers/citation-verify-ita/src
 COPY mcp-servers/eur-lex-ita/src mcp-servers/eur-lex-ita/src
 COPY mcp-servers/legal-citations-ita/src mcp-servers/legal-citations-ita/src
 COPY mcp-servers/legal-persona-ita/src mcp-servers/legal-persona-ita/src
+COPY mcp-servers/workflows/src mcp-servers/workflows/src
 COPY mcp-servers-http/src mcp-servers-http/src
 
 # Build all workspaces (root script builds shared+normattiva+cassazione first,
@@ -78,6 +81,8 @@ COPY --from=builder /app/mcp-servers/legal-citations-ita/dist mcp-servers/legal-
 COPY --from=builder /app/mcp-servers/legal-citations-ita/package.json mcp-servers/legal-citations-ita/
 COPY --from=builder /app/mcp-servers/legal-persona-ita/dist mcp-servers/legal-persona-ita/dist
 COPY --from=builder /app/mcp-servers/legal-persona-ita/package.json mcp-servers/legal-persona-ita/
+COPY --from=builder /app/mcp-servers/workflows/dist mcp-servers/workflows/dist
+COPY --from=builder /app/mcp-servers/workflows/package.json mcp-servers/workflows/
 COPY --from=builder /app/mcp-servers-http/dist mcp-servers-http/dist
 COPY --from=builder /app/mcp-servers-http/package.json mcp-servers-http/
 

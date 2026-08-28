@@ -5,6 +5,17 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 Il formato è basato su [Keep a Changelog](https://keepachangelog.com/it/1.0.0/),
 e questo progetto aderisce a [Semantic Versioning](https://semver.org/lang/it/).
 
+## [1.2.0] - 2026-08-28
+
+### Aggiunto
+
+- **Server `workflows-ita`** (nuovo workspace `mcp-servers/workflows`) — Porting italiano del server svizzero `workflows-ch`: workflow legali personalizzati riutilizzabili con 8 tool (`list_agents`, `validate_pipeline`, `save_workflow`, `list_workflows`, `get_workflow`, `delete_workflow`, `claim_user_id`, `log_run`). Persistenza su Postgres (`DATABASE_URL`) con schema idempotente e seed del manifest dei 16 agenti chainable del plugin italiano (`cantonal` → `regional`). Richiede un database Postgres provisioning (es. Railway) per l'uso a runtime.
+- **Aggregatore** — Registrato `workflows-ita` su `POST /workflows-ita/mcp`.
+
+### Note
+
+- **Deroga deliberata all'envelope `{success, data}`** — Le risposte di `workflows-ita` usano JSON libero + `isError` (e `{valid:false, errors}` per gli errori di validazione pipeline) per parità di contratto col plugin, come nel server svizzero di origine.
+
 ## [1.1.2] - 2026-08-24
 
 ### Corretto

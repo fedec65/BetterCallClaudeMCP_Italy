@@ -61,6 +61,7 @@ L'aggregatore in `mcp-servers-http/src/server-registry.ts` importa la factory di
 | legal-citations-ita | Logica interna | — | ✅ Alta |
 | legal-persona-ita | Logica interna | — | ✅ Alta |
 | citation-verify-ita | ItalGiure Solr (giurisprudenza) + Normattiva (legislazione) | Orchestrazione fonti esistenti | ⚠️ Media (eredita dai server sottostanti) |
+| workflows-ita | Postgres (`DATABASE_URL`) | Logica interna + DB | ✅ Alta |
 
 ### Strategia di accesso dati
 
