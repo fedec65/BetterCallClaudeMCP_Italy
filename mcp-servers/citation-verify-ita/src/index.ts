@@ -19,13 +19,13 @@ const tools: Tool[] = [
     description: `Verifica l'esistenza di una citazione giuridica italiana interrogando le fonti ufficiali.
 
 Riconosce:
-- Sentenze Cassazione (es. "Cass. n. 12345/2024", "Cassazione civile Sez. 3, n. 32127 del 2024") → verifica su ItalGiure (CED Ministero della Giustizia)
+- Sentenze Cassazione (es. "Cass. n. 12345/2024", "Cassazione civile Sez. 3, n. 32127 del 2024") → verifica su ItalGiure (CED Ministero della Giustizia). Questo server non raggiunge ItalGiure dal proprio IP di datacenter: per le sentenze la verifica va fatta dal canale lato client (skill italgiure-search del plugin BetterCallClaude Italia)
 - Atti normativi (es. "D.Lgs. 231/2001", "Legge 24 agosto 2017, n. 123") → verifica su Normattiva Open Data
 - Codici abbreviati (es. "art. 1456 c.c.", "art. 360 c.p.c.") → verifica l'atto istitutivo del codice
 
 Parametri:
 - citazione (obbligatorio): la citazione da verificare
-- italgiure_cookie (opzionale): cookie di sessione ItalGiure, necessario per le citazioni di giurisprudenza. Se omesso, il server usa ITALGIURE_COOKIE env var o italgiure_cookie.txt.
+- italgiure_cookie (opzionale): cookie di sessione ItalGiure. Se omesso, il server usa ITALGIURE_COOKIE env var o italgiure_cookie.txt. Attenzione: per le citazioni di giurisprudenza la fonte non è raggiungibile da questo server (blocco per IP del datacenter): il cookie, di per sé, non sblocca la verifica.
 
 IMPORTANTE: questo tool verifica solo l'ESISTENZA della fonte, non se il contenuto supporta una specifica affermazione (implicazione). La verifica di implicazione resta responsabilità del client/LLM.
 

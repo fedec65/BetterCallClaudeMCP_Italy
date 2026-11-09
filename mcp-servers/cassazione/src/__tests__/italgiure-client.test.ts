@@ -4,6 +4,8 @@ import {
   calculateStart,
   buildPdfUrl,
   getItalgiureCookie,
+  ITALGIURE_BLOCKED_MESSAGE,
+  ITALGIURE_COOKIE_PROCEDURE,
 } from '../tools/italgiure-client.js';
 import type { SearchMassimeInput } from '../types.js';
 
@@ -106,5 +108,27 @@ describe('italgiure-client', () => {
       process.env.ITALGIURE_COOKIE = '  cookie-value  ';
       expect(getItalgiureCookie()).toBe('cookie-value');
     });
+  });
+});
+
+describe('messaggi di fallback', () => {
+  it('non suggerisce document.cookie', () => {
+    expect(ITALGIURE_COOKIE_PROCEDURE).not.toContain('document.cookie');
+  });
+
+  it('spiega che il cookie si prende dalla scheda Network', () => {
+    expect(ITALGIURE_COOKIE_PROCEDURE).toContain('Network');
+  });
+
+  it('nomina il blocco per IP del datacenter', () => {
+    expect(ITALGIURE_BLOCKED_MESSAGE).toContain('datacenter');
+  });
+
+  it('non promette SentenzeWeb come alternativa per il server', () => {
+    expect(ITALGIURE_BLOCKED_MESSAGE).not.toContain('Alternativa gratuita');
+  });
+
+  it('rimanda al canale client-side', () => {
+    expect(ITALGIURE_BLOCKED_MESSAGE).toContain('italgiure-search');
   });
 });
