@@ -8,6 +8,47 @@ const ITALGIURE_BASE = 'https://www.italgiure.giustizia.it/sncass';
 export const SOLR_ENDPOINT = `${ITALGIURE_BASE}/isapi/hc.dll/sn.solr/sn-collection/select?app.query`;
 
 /**
+ * Diagnosi del blocco per IP.
+ *
+ * Misurato dal container di produzione: www.italgiure.giustizia.it scarta a
+ * livello TCP le connessioni provenienti dall'IP del datacenter che ospita
+ * questo server, con o senza cookie di sessione. Non è un problema di cookie
+ * mancante né di cookie scaduto: è il punto di partenza della connessione.
+ *
+ * Il canale supportato per la ricerca Cassazione è lato client (skill
+ * italgiure-search del plugin BetterCallClaude), che interroga lo stesso
+ * indice dall'IP dell'utente.
+ */
+export const ITALGIURE_BLOCKED_MESSAGE =
+  'Il server non riesce a raggiungere ItalGiure: le richieste provenienti dal ' +
+  'datacenter che ospita questo servizio vengono scartate a livello di rete ' +
+  '(timeout di connessione), indipendentemente dalla presenza di un cookie. ' +
+  'Non è un problema di cookie mancante o scaduto. ' +
+  'Usa la ricerca lato client (skill italgiure-search del plugin ' +
+  'BetterCallClaude Italia), che interroga lo stesso indice pubblico ' +
+  'SentenzeWeb dall\'IP del computer dell\'utente.';
+
+/**
+ * Procedura corretta per ottenere il cookie di sessione.
+ *
+ * I cookie di sessione dell'area riservata sono HttpOnly: la Console del
+ * browser restituisce una stringa vuota e l'API JavaScript dei cookie non può
+ * leggerli. L'unica fonte è l'intestazione Cookie di una richiesta dati
+ * dell'area riservata, vista nella scheda Network degli strumenti per
+ * sviluppatori.
+ */
+export const ITALGIURE_COOKIE_PROCEDURE =
+  'Per ottenere il cookie di sessione: accedi all\'area riservata ' +
+  'https://www.italgiure.giustizia.it/new/archives con SPID o credenziali ' +
+  'professionali, apri gli strumenti per sviluppatori (F12 / Cmd+Option+I), ' +
+  'vai nella scheda Network PRIMA di fare la ricerca, individua la richiesta ' +
+  'dati dell\'area riservata e copia il valore completo dell\'intestazione ' +
+  'Cookie in Request Headers. I cookie sono HttpOnly: la Console restituisce ' +
+  'una stringa vuota e l\'API JavaScript dei cookie non li espone. ' +
+  'Passa il valore al server tramite la variabile ITALGIURE_COOKIE o il ' +
+  'parametro cookie dell\'API MCP.';
+
+/**
  * Legge il cookie di sessione ItalGiure da parametro, vault sessioni,
  * env var o file locale.
  * Priorita': parametro > session vault (session_key) > env var > file locale.
@@ -194,7 +235,7 @@ export async function searchItalgiure(input: SearchMassimeInput): Promise<{
         urlEcli,
         urlGoogle: google,
         urlDuckDuckGo: duckduckgo,
-        istruzioni: 'Cookie di sessione ItalGiure non configurato. Alternativa gratuita senza login: SentenzeWeb (https://www.italgiure.giustizia.it/sncass/, sentenze dal 2012). Per la ricerca avanzata (massime complete): 1) Accedi a ItalGiure con SPID/credenziali, 2) Esegui document.cookie, 3) Imposta ITALGIURE_COOKIE o passa il cookie come parametro MCP.',
+        istruzioni: ITALGIURE_COOKIE_PROCEDURE + ' ' + ITALGIURE_BLOCKED_MESSAGE,
       },
     };
   }
@@ -259,7 +300,11 @@ export async function searchItalgiure(input: SearchMassimeInput): Promise<{
           urlEcli,
           urlGoogle: google,
           urlDuckDuckGo: duckduckgo,
-          istruzioni: `Sessione ItalGiure scaduta (${parsed.message}). Alternativa gratuita senza login: SentenzeWeb. Per la ricerca avanzata: aggiorna il cookie via document.cookie e ITALGIURE_COOKIE, o passa il cookie come parametro MCP.`,
+          istruzioni:
+            `Sessione ItalGiure scaduta (${parsed.message}). ` +
+            ITALGIURE_COOKIE_PROCEDURE +
+            ' La ricerca su questo server resta comunque non raggiungibile per il blocco per IP. ' +
+            ITALGIURE_BLOCKED_MESSAGE,
         },
       };
     }
@@ -277,7 +322,11 @@ export async function searchItalgiure(input: SearchMassimeInput): Promise<{
         urlEcli,
         urlGoogle: google,
         urlDuckDuckGo: duckduckgo,
-        istruzioni: `Errore ItalGiure: ${parsed.message}. Prova SentenzeWeb (gratuito, senza login) o i link di fallback.`,
+        istruzioni:
+          `Errore ItalGiure: ${parsed.message}. ` +
+          ITALGIURE_COOKIE_PROCEDURE +
+          ' ' +
+          ITALGIURE_BLOCKED_MESSAGE,
       },
     };
   }
@@ -320,7 +369,7 @@ export async function getSentenzaItalgiure(id: string, paramCookie?: string, ses
       fallback: {
         urlItalgiure: `${ITALGIURE_BASE}/sncass.php`,
         urlSentenzeWeb: 'https://www.italgiure.giustizia.it/sncass/',
-        istruzioni: 'Cookie ItalGiure non configurato. Alternativa gratuita senza login: SentenzeWeb (sentenze dal 2012). Per massime complete: accedi a ItalGiure con SPID/credenziali e configura ITALGIURE_COOKIE o passa il cookie come parametro MCP.',
+        istruzioni: ITALGIURE_COOKIE_PROCEDURE + ' ' + ITALGIURE_BLOCKED_MESSAGE,
       },
     };
   }
@@ -381,8 +430,14 @@ export async function getSentenzaItalgiure(id: string, paramCookie?: string, ses
         urlItalgiure: `${ITALGIURE_BASE}/sncass.php`,
         urlSentenzeWeb: 'https://www.italgiure.giustizia.it/sncass/',
         istruzioni: isAuthError
-          ? `Sessione ItalGiure scaduta (${parsed.message}). Prova SentenzeWeb (gratuito) o aggiorna il cookie.`
-          : `Errore nel recupero sentenza: ${parsed.message}. Prova SentenzeWeb (gratuito).`,
+          ? `Sessione ItalGiure scaduta (${parsed.message}). ` +
+            ITALGIURE_COOKIE_PROCEDURE +
+            ' ' +
+            ITALGIURE_BLOCKED_MESSAGE
+          : `Errore nel recupero sentenza: ${parsed.message}. ` +
+            ITALGIURE_COOKIE_PROCEDURE +
+            ' ' +
+            ITALGIURE_BLOCKED_MESSAGE,
       },
     };
   }
