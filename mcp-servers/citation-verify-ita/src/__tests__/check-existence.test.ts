@@ -4,6 +4,17 @@ import { checkExistence, normalizeCitazione } from '../tools/check-existence.js'
 // Mock delle fonti dati (nessuna rete nei test)
 vi.mock('@bettercallclaude-italia/cassazione/italgiure-client', () => ({
   searchItalgiure: vi.fn(),
+  // Testo fedele della costante esportata dal pacchetto cassazione (B1): il
+  // modulo è sostituito interamente dal mock, quindi la costante va ridefinita
+  // qui o sarebbe undefined nel messaggio emesso dal tool.
+  ITALGIURE_BLOCKED_MESSAGE:
+    'Il server non riesce a raggiungere ItalGiure: le richieste provenienti dal ' +
+    'datacenter che ospita questo servizio vengono scartate a livello di rete ' +
+    '(timeout di connessione), indipendentemente dalla presenza di un cookie. ' +
+    'Non è un problema di cookie mancante o scaduto. ' +
+    'Usa la ricerca lato client (skill italgiure-search del plugin ' +
+    'BetterCallClaude Italia), che interroga lo stesso indice pubblico ' +
+    'SentenzeWeb dall\'IP del computer dell\'utente.',
 }));
 vi.mock('@bettercallclaude-italia/normattiva/search-advanced', () => ({
   searchNormattivaAdvanced: vi.fn(),
@@ -105,6 +116,54 @@ describe('checkExistence', () => {
 
     await expect(checkExistence({ citazione: 'Cass. n. 12345/2024' }))
       .rejects.toThrow('SOURCE_UNAVAILABLE');
+  });
+
+  it('per una sentenza con fonte irraggiungibile spiega il blocco per IP', async () => {
+    mockedSearchItalgiure.mockResolvedValue({
+      success: false,
+      cookieValido: false,
+      totale: 0,
+      massime: [],
+      fallback: {
+        urlRicerca: 'https://example.invalid',
+        urlItalgiure: 'https://example.invalid',
+        urlSentenzeWeb: 'https://example.invalid',
+        urlGoogle: 'https://example.invalid',
+        urlDuckDuckGo: 'https://example.invalid',
+        istruzioni: 'Errore ItalGiure: timeout.',
+      },
+    });
+
+    await expect(checkExistence({ citazione: 'Cass. n. 12345/2024' })).rejects.toThrow(
+      /SOURCE_UNAVAILABLE/
+    );
+    await expect(checkExistence({ citazione: 'Cass. n. 12345/2024' })).rejects.toThrow(
+      /datacenter/
+    );
+    await expect(checkExistence({ citazione: 'Cass. n. 12345/2024' })).rejects.toThrow(
+      /italgiure-search/
+    );
+  });
+
+  it('per una sentenza con fonte irraggiungibile non promette SentenzeWeb come alternativa', async () => {
+    mockedSearchItalgiure.mockResolvedValue({
+      success: false,
+      cookieValido: false,
+      totale: 0,
+      massime: [],
+      fallback: {
+        urlRicerca: 'https://example.invalid',
+        urlItalgiure: 'https://example.invalid',
+        urlSentenzeWeb: 'https://example.invalid',
+        urlGoogle: 'https://example.invalid',
+        urlDuckDuckGo: 'https://example.invalid',
+        istruzioni: 'Errore ItalGiure: timeout.',
+      },
+    });
+
+    await expect(checkExistence({ citazione: 'Cass. n. 12345/2024' })).rejects.not.toThrow(
+      /Alternativa gratuita/
+    );
   });
 
   it('returns exists=true when ItalGiure finds the sentenza', async () => {

@@ -1,4 +1,7 @@
-import { searchItalgiure } from '@bettercallclaude-italia/cassazione/italgiure-client';
+import {
+  searchItalgiure,
+  ITALGIURE_BLOCKED_MESSAGE,
+} from '@bettercallclaude-italia/cassazione/italgiure-client';
 import { searchNormattivaAdvanced } from '@bettercallclaude-italia/normattiva/search-advanced';
 import type {
   CheckExistenceInput,
@@ -174,9 +177,13 @@ async function checkSentenzaCassazione(
   });
 
   if (!result.success) {
-    // Cookie assente/scaduto o errore di rete: la fonte non è raggiungibile
+    // La fonte non è raggiungibile. Il messaggio deve dire PERCHÉ, altrimenti
+    // è indistinguibile da un difetto del servizio: l'utente non sa se la
+    // sentenza esiste, se la fonte è giù o se il canale è rotto.
     throw new Error(
-      `SOURCE_UNAVAILABLE: ItalGiure non raggiungibile (${result.fallback.istruzioni})`
+      'SOURCE_UNAVAILABLE: verifica della sentenza non eseguibile da questo server. ' +
+      ITALGIURE_BLOCKED_MESSAGE +
+      ' Dettaglio: ' + result.fallback.istruzioni
     );
   }
 
