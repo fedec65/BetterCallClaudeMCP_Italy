@@ -5,6 +5,13 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 Il formato è basato su [Keep a Changelog](https://keepachangelog.com/it/1.0.0/),
 e questo progetto aderisce a [Semantic Versioning](https://semver.org/lang/it/).
 
+## [Unreleased]
+
+### Fixed
+- **Messaggi del server cassazione onesti sul blocco per IP**: `www.italgiure.giustizia.it` scarta a livello TCP le connessioni dal datacenter che ospita i server MCP, con o senza cookie di sessione. I messaggi di fallback dicevano «esegui document.cookie» (su cookie HttpOnly) e presentavano SentenzeWeb come alternativa gratuita, ma per il server è lo stesso endpoint scartato. Ora indicano la causa reale e rimandano al canale lato client (skill `italgiure-search`).
+- **Descrizioni dei tool aggiornate**: `cassazione_search_massime` e `cassazione_get_sentenza` non si presentano più come tool che «richiedono un cookie attivo»; dichiarano il limite di raggiungibilità. `citation-verify-ita_check_existence` dice che per le sentenze la verifica va fatta lato client.
+- **`citation-verify-ita` distingue i casi**: per una sentenza non verificabile da questo server l'errore `SOURCE_UNAVAILABLE` nomina il blocco per IP e il percorso alternativo, invece di lasciare il cliente senza sapere se la sentenza esista, se la fonte sia giù o se il canale sia rotto. Il ramo normativo è invariato.
+
 ## [1.2.0] - 2026-08-28
 
 ### Aggiunto
