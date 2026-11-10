@@ -35,37 +35,35 @@ https://mcp-italia.bettercallclaude.ch
 
 Il server `cassazione` interroga l'API Solr di [ItalGiure](https://www.italgiure.giustizia.it/sncass/) (CED della Corte di Cassazione), che richiede autenticazione tramite cookie di sessione.
 
+> **Nota sul deployment di produzione.** Misurato dal container: `www.italgiure.giustizia.it` scarta a livello TCP le connessioni provenienti dall'IP di datacenter che ospita i server MCP, con o senza cookie. Da qui la ricerca Cassazione **non è raggiungibile**: il canale supportato è lato client (skill `italgiure-search` del plugin BetterCallClaude Italia), che interroga lo stesso indice pubblico SentenzeWeb dall'IP del computer dell'utente. La procedura cookie qui sotto serve per esecuzioni locali (stdio) o per ambienti con IP ammesso.
+
 #### Cosa succede senza cookie
 
-Senza il cookie configurato, il connettore **funziona comunque** ma con capacità ridotte:
-- La ricerca restituisce URL di fallback per la consultazione manuale (SentenzeWeb, Google, DuckDuckGo)
-- [SentenzeWeb](https://www.italgiure.giustizia.it/sncass/) è gratuito e copre le sentenze dal 2012 in poi, ma non è interrogabile via API
-- Le massime complete e le sentenze precedenti al 2012 non sono accessibili senza autenticazione
+Senza cookie configurato la ricerca **non viene eseguita**: il tool risponde subito con `success: false`, `cookieValido: false`, `totale: 0` e i link di fallback per la consultazione manuale (SentenzeWeb, ECLI, Google, DuckDuckGo). Nessuna richiesta viene inviata a ItalGiure, quindi il messaggio non attribuisce la mancata risposta a un blocco per IP.
 
 #### Come ottenere e configurare il cookie
 
-1. **Accedi a ItalGiure** con SPID o credenziali istituzionali:
+1. **Accedi a ItalGiure** con SPID o credenziali professionali:
    - Vai sull'**area riservata**: https://www.italgiure.giustizia.it/new/archives
    - Esegui il login (SPID, CNS, o credenziali ministeriali/professionali)
-   - Nota: la pagina di ricerca libera (`/sncass/`, "Sentenze Cassazione") **non** richiede login — il cookie si ottiene dall'area riservata e vale per tutto il dominio `www.italgiure.giustizia.it`
 
 2. **Estrai il cookie di sessione** dal browser:
-   - Apri DevTools (F12) → scheda **Application** (Chrome) o **Storage** (Firefox)
-   - Sezione **Cookies** → `https://www.italgiure.giustizia.it`
-   - Copia il valore del cookie `JSESSIONID` (es. `JSESSIONID=ABC123DEF456`)
-   - In alternativa, dalla Console: `document.cookie`
+   - Apri DevTools (F12 / Cmd+Option+I) → scheda **Network**
+   - Fai una ricerca nell'area riservata e individua la richiesta dati
+   - Apri la richiesta → **Request Headers** → copia il valore completo dell'intestazione **Cookie**
+   - I cookie dell'area riservata sono **HttpOnly**: la scheda Application/Storage può mostrarne il nome, ma dalla Console il valore non è leggibile e il nome del cookie può cambiare fra un rilascio e l'altro: copia l'intera intestazione, non un singolo valore
 
 3. **Configura la variabile d'ambiente**:
    ```bash
    # Nel file .env del server (o variabile d'ambiente Railway)
-   ITALGIURE_COOKIE="JSESSIONID=ABC123DEF456"
+   ITALGIURE_COOKIE="nome=valore; altro=valore"
    ```
    Oppure salva il cookie in un file `italgiure_cookie.txt` nella working directory del server.
 
 #### Durata e rinnovo
 
 - Il cookie di sessione ItalGiure ha durata limitata (tipicamente alcune ore)
-- Quando scade, il connettore rileva automaticamente l'invalidità e restituisce i fallback
+- Quando scade, il connettore rileva l'invalidità (401/403) e restituisce i fallback con la procedura di rinnovo
 - Per un uso continuativo, il cookie deve essere rinnovato periodicamente
 
 #### Session vault per-utente (tool `cassazione_session_*`)
