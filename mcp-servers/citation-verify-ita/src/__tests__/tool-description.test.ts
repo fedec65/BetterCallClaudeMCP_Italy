@@ -37,3 +37,23 @@ describe('descrizione del tool citation-verify-ita_check_existence', () => {
     expect(descrizione).toContain('senza inventare contenuto');
   });
 });
+
+/**
+ * Il README del pacchetto ripete la stessa distinzione: il cookie mancante
+ * non è una fonte irraggiungibile, è una richiesta mai inviata.
+ */
+const readme = readFileSync(resolve(__dirname, '..', '..', 'README.md'), 'utf8');
+
+describe('README del pacchetto citation-verify-ita', () => {
+  it('non raggruppa il cookie mancante fra le cause di fonte non raggiungibile', () => {
+    expect(readme).not.toContain('Se la fonte non è raggiungibile (cookie ItalGiure assente/scaduto');
+  });
+
+  it('distingue il caso in cui la richiesta non è stata inviata', () => {
+    expect(readme).toContain('non viene inviata a ItalGiure');
+  });
+
+  it('distingue il caso in cui la fonte è stata interrogata e non è raggiungibile', () => {
+    expect(readme).toContain('Fonte interrogata e non raggiungibile');
+  });
+});
