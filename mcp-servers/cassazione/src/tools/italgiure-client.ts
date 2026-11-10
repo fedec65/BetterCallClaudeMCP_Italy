@@ -13,20 +13,22 @@ export const SOLR_ENDPOINT = `${ITALGIURE_BASE}/isapi/hc.dll/sn.solr/sn-collecti
  * Misurato dal container di produzione: www.italgiure.giustizia.it scarta a
  * livello TCP le connessioni provenienti dall'IP del datacenter che ospita
  * questo server, con o senza cookie di sessione. Il messaggio è però limitato
- * a ciò che è stato osservato: la connessione non ha raggiunto il servizio.
- * Il blocco per IP è il caso noto e misurato del deployment su datacenter, non
- * una diagnosi valida per qualsiasi host (su una postazione locale il fallimento
- * può essere anche un servizio momentaneamente indisponibile).
+ * a ciò che è stato osservato: la connessione non ha raggiunto il servizio
+ * (timeout o connessione non riuscita). Il blocco per IP è il caso noto e
+ * misurato del deployment su datacenter, non una diagnosi valida per qualsiasi
+ * host (su una postazione locale il fallimento può essere anche un servizio
+ * momentaneamente indisponibile).
  *
  * Il canale supportato per la ricerca Cassazione è lato client (skill
  * italgiure-search del plugin BetterCallClaude), che interroga lo stesso
  * indice dall'IP dell'utente.
  */
 export const ITALGIURE_BLOCKED_MESSAGE =
-  'La connessione a ItalGiure non ha raggiunto il servizio (timeout a livello di rete, ' +
-  'osservato ora). Le cause possibili sono il blocco per IP (il caso noto e misurato del ' +
-  'deployment su IP datacenter, dove lo scarto avviene prima che la richiesta raggiunga il ' +
-  'servizio e il cookie non cambia l\'esito) oppure l\'indisponibilità del servizio. ' +
+  'La connessione a ItalGiure non ha raggiunto il servizio (timeout o connessione non ' +
+  'riuscita a livello di rete, osservato ora). Le cause possibili sono il blocco per IP ' +
+  '(il caso noto e misurato del deployment su IP datacenter, dove lo scarto avviene prima ' +
+  'che la richiesta raggiunga il servizio e il cookie non cambia l\'esito) oppure ' +
+  'l\'indisponibilità del servizio. ' +
   'Il canale supportato per la ricerca Cassazione è lato client (skill italgiure-search ' +
   'del plugin BetterCallClaude Italia), che interroga lo stesso indice pubblico ' +
   'SentenzeWeb dall\'IP del computer dell\'utente.';
@@ -134,13 +136,14 @@ export function classificaFallimentoItalgiure(
     return { tipo: 'trasporto', messaggio: ITALGIURE_BLOCKED_MESSAGE };
   }
 
-  return { tipo: 'errore', messaggio: `Errore ItalGiure: ${message}.` };
+  const testo = message.replace(/\.+\s*$/, '');
+  return { tipo: 'errore', messaggio: `Errore ItalGiure: ${testo}.` };
 }
 
 /**
  * Legge il cookie di sessione ItalGiure da parametro, vault sessioni,
  * env var o file locale.
- * Priorita': parametro > session vault (session_key) > env var > file locale.
+ * Priorità: parametro > session vault (session_key) > env var > file locale.
  */
 export function getItalgiureCookie(paramCookie?: string, sessionKey?: string): string | undefined {
   if (paramCookie && paramCookie.trim()) {

@@ -138,6 +138,11 @@ describe('messaggi di fallback', () => {
   it('rimanda al canale client-side', () => {
     expect(ITALGIURE_BLOCKED_MESSAGE).toContain('italgiure-search');
   });
+
+  it('copre sia il timeout sia la connessione non riuscita', () => {
+    expect(ITALGIURE_BLOCKED_MESSAGE).toContain('timeout');
+    expect(ITALGIURE_BLOCKED_MESSAGE).toContain('connessione non riuscita');
+  });
 });
 
 describe('messaggi del ramo senza cookie', () => {
@@ -202,6 +207,20 @@ describe('classificaFallimentoItalgiure', () => {
   it('classifica 401 con status HTTP come problema di cookie', () => {
     const r = classificaFallimentoItalgiure('API_ERROR', 'Request failed with status code 401', 401);
     expect(r.tipo).toBe('cookie');
+  });
+
+  it('non accumula due punti finali quando il messaggio originale li ha già', () => {
+    const r = classificaFallimentoItalgiure(
+      'RATE_LIMIT_EXCEEDED',
+      'Limite di richieste superato. Riprova più tardi.'
+    );
+    expect(r.messaggio).not.toMatch(/\.\.$/);
+    expect(r.messaggio).toContain('Limite di richieste superato');
+  });
+
+  it('chiude con un punto quando il messaggio originale non lo ha', () => {
+    const r = classificaFallimentoItalgiure('INTERNAL_ERROR', 'Errore sconosciuto');
+    expect(r.messaggio).toBe('Errore ItalGiure: Errore sconosciuto.');
   });
 });
 
