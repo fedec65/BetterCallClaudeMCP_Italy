@@ -9,6 +9,7 @@ import {
   searchItalgiure,
   getSentenzaItalgiure,
   classificaFallimentoItalgiure,
+  statusHttpErrore,
   ITALGIURE_BLOCKED_MESSAGE,
   ITALGIURE_COOKIE_PROCEDURE,
   ITALGIURE_MISSING_COOKIE_MESSAGE,
@@ -179,6 +180,42 @@ describe('classificaFallimentoItalgiure', () => {
     const r = classificaFallimentoItalgiure('RATE_LIMIT_EXCEEDED', 'Limite di richieste superato.');
     expect(r.tipo).toBe('errore');
     expect(r.messaggio).not.toContain('datacenter');
+  });
+
+  it('classifica un errore HTTP 500 come errore del servizio, non come fallimento di trasporto', () => {
+    const r = classificaFallimentoItalgiure(
+      'API_UNAVAILABLE',
+      'Servizio non disponibile: Internal Server Error',
+      500
+    );
+    expect(r.tipo).toBe('errore');
+    expect(r.messaggio).toContain('500');
+    expect(r.messaggio).not.toContain('datacenter');
+  });
+
+  it('classifica l\'indisponibilità senza risposta HTTP come fallimento di trasporto', () => {
+    const r = classificaFallimentoItalgiure('API_UNAVAILABLE', 'Servizio non disponibile', undefined);
+    expect(r.tipo).toBe('trasporto');
+    expect(r.messaggio).toBe(ITALGIURE_BLOCKED_MESSAGE);
+  });
+
+  it('classifica 401 con status HTTP come problema di cookie', () => {
+    const r = classificaFallimentoItalgiure('API_ERROR', 'Request failed with status code 401', 401);
+    expect(r.tipo).toBe('cookie');
+  });
+});
+
+describe('statusHttpErrore', () => {
+  it('legge lo status dalla risposta dell\'errore axios', () => {
+    expect(statusHttpErrore({ response: { status: 500 } })).toBe(500);
+  });
+
+  it('restituisce undefined per un errore senza risposta HTTP', () => {
+    expect(statusHttpErrore({ message: 'timeout of 30000ms exceeded' })).toBeUndefined();
+  });
+
+  it('restituisce undefined per un errore non axios', () => {
+    expect(statusHttpErrore(new Error('boom'))).toBeUndefined();
   });
 });
 

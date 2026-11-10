@@ -69,12 +69,13 @@ export const ITALGIURE_MISSING_COOKIE_MESSAGE =
  * Classificazione di un fallimento del client ItalGiure.
  *
  * - 'trasporto': la connessione non ha raggiunto il servizio (timeout o
- *   indisponibilità). Nel deployment su IP datacenter è il blocco noto; da un
- *   IP ammesso può essere anche un servizio momentaneamente giù.
+ *   indisponibilità senza una risposta HTTP). Nel deployment su IP datacenter
+ *   è il blocco noto; da un IP ammesso può essere anche un servizio
+ *   momentaneamente giù.
  * - 'cookie': il servizio ha risposto 401/403, cioè la sessione manca o è scaduta.
- * - 'errore': qualsiasi altro errore (HTTP 5xx, rate limit, errore interno): qui
- *   non si sa nulla sullo stato della rete, quindi il messaggio non deve
- *   dichiarare un blocco per IP.
+ * - 'errore': il servizio ha risposto con un errore HTTP, oppure è fallito in
+ *   altro modo (rate limit, errore interno): qui non si sa nulla sullo stato
+ *   della rete, quindi il messaggio non deve dichiarare un blocco per IP.
  */
 export type TipoFallimentoItalgiure = 'trasporto' | 'cookie' | 'errore';
 
@@ -84,14 +85,48 @@ export interface FallimentoItalgiure {
 }
 
 /**
- * Classifica un errore del client ItalGiure in base al codice restituito da
- * parseApiError e al messaggio originale.
+ * Estrae lo status HTTP dal errore grezzo.
+ *
+ * parseApiError collassa in API_UNAVAILABLE sia una risposta HTTP >= 500 sia
+ * una connessione mai arrivata al servizio: per distinguerle serve lo status
+ * della risposta. La forma dell'errore axios viene letta per duck-typing, senza
+ * importare axios in questo pacchetto.
  */
-export function classificaFallimentoItalgiure(code: string, message: string): FallimentoItalgiure {
-  if (code === 'API_ERROR' && (message.includes('401') || message.includes('403'))) {
+export function statusHttpErrore(error: unknown): number | undefined {
+  const status = (error as { response?: { status?: number } } | undefined)?.response?.status;
+  return typeof status === 'number' ? status : undefined;
+}
+
+/**
+ * Classifica un errore del client ItalGiure in base al codice restituito da
+ * parseApiError, al messaggio originale e allo status HTTP della risposta.
+ *
+ * Lo status distingue "il servizio ha risposto con un errore" da "la
+ * connessione non ha raggiunto il servizio": senza risposta HTTP non si può
+ * attribuire al blocco per IP un timeout che forse non c'è stato.
+ */
+export function classificaFallimentoItalgiure(
+  code: string,
+  message: string,
+  status?: number
+): FallimentoItalgiure {
+  const cookieDaStatus = status === 401 || status === 403;
+  const cookieDaMessaggio =
+    status === undefined &&
+    code === 'API_ERROR' &&
+    (message.includes('401') || message.includes('403'));
+
+  if (cookieDaStatus || cookieDaMessaggio) {
     return {
       tipo: 'cookie',
       messaggio: `Sessione ItalGiure scaduta o non valida (${message}).`,
+    };
+  }
+
+  if (status !== undefined) {
+    return {
+      tipo: 'errore',
+      messaggio: `Errore ItalGiure: il servizio ha risposto con HTTP ${status} (${message}).`,
     };
   }
 
@@ -339,7 +374,11 @@ export async function searchItalgiure(input: SearchMassimeInput): Promise<{
     };
   } catch (error) {
     const parsed = parseApiError(error);
-    const fallimento = classificaFallimentoItalgiure(parsed.code, parsed.message);
+    const fallimento = classificaFallimentoItalgiure(
+      parsed.code,
+      parsed.message,
+      statusHttpErrore(error)
+    );
 
     const istruzioni =
       fallimento.tipo === 'cookie'
@@ -453,7 +492,11 @@ export async function getSentenzaItalgiure(id: string, paramCookie?: string, ses
     };
   } catch (error) {
     const parsed = parseApiError(error);
-    const fallimento = classificaFallimentoItalgiure(parsed.code, parsed.message);
+    const fallimento = classificaFallimentoItalgiure(
+      parsed.code,
+      parsed.message,
+      statusHttpErrore(error)
+    );
 
     const istruzioni =
       fallimento.tipo === 'cookie'
