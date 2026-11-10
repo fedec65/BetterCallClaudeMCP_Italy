@@ -1,11 +1,17 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { existsSync } from 'fs';
+import { resolve } from 'path';
 import {
   buildSolrQuery,
   calculateStart,
   buildPdfUrl,
   getItalgiureCookie,
+  searchItalgiure,
+  getSentenzaItalgiure,
+  classificaFallimentoItalgiure,
   ITALGIURE_BLOCKED_MESSAGE,
   ITALGIURE_COOKIE_PROCEDURE,
+  ITALGIURE_MISSING_COOKIE_MESSAGE,
 } from '../tools/italgiure-client.js';
 import type { SearchMassimeInput } from '../types.js';
 
@@ -130,5 +136,78 @@ describe('messaggi di fallback', () => {
 
   it('rimanda al canale client-side', () => {
     expect(ITALGIURE_BLOCKED_MESSAGE).toContain('italgiure-search');
+  });
+});
+
+describe('messaggi del ramo senza cookie', () => {
+  it('dichiara che nessuna richiesta è stata inviata', () => {
+    expect(ITALGIURE_MISSING_COOKIE_MESSAGE).toContain('nessuna richiesta');
+  });
+
+  it('non dichiara il blocco per IP: in questo ramo non è stata osservata alcuna connessione', () => {
+    expect(ITALGIURE_MISSING_COOKIE_MESSAGE).not.toContain('datacenter');
+  });
+
+  it('rimanda al canale client', () => {
+    expect(ITALGIURE_MISSING_COOKIE_MESSAGE).toContain('italgiure-search');
+  });
+});
+
+describe('classificaFallimentoItalgiure', () => {
+  it('classifica il timeout come fallimento di trasporto', () => {
+    const r = classificaFallimentoItalgiure('API_TIMEOUT', 'Timeout nella richiesta all\'API.');
+    expect(r.tipo).toBe('trasporto');
+    expect(r.messaggio).toBe(ITALGIURE_BLOCKED_MESSAGE);
+  });
+
+  it('classifica l\'indisponibilità del servizio come fallimento di trasporto', () => {
+    expect(classificaFallimentoItalgiure('API_UNAVAILABLE', 'Servizio non disponibile').tipo).toBe('trasporto');
+  });
+
+  it('classifica 401 e 403 come problema di cookie', () => {
+    expect(classificaFallimentoItalgiure('API_ERROR', 'Request failed with status code 401').tipo).toBe('cookie');
+    expect(classificaFallimentoItalgiure('API_ERROR', 'Request failed with status code 403').tipo).toBe('cookie');
+  });
+
+  it('non dichiara il blocco per IP su un errore HTTP non di trasporto', () => {
+    const r = classificaFallimentoItalgiure('API_ERROR', 'Request failed with status code 500');
+    expect(r.tipo).toBe('errore');
+    expect(r.messaggio).not.toContain('datacenter');
+  });
+
+  it('non dichiara il blocco per IP su un rate limit', () => {
+    const r = classificaFallimentoItalgiure('RATE_LIMIT_EXCEEDED', 'Limite di richieste superato.');
+    expect(r.tipo).toBe('errore');
+    expect(r.messaggio).not.toContain('datacenter');
+  });
+});
+
+describe('rami senza cookie (nessuna richiesta inviata)', () => {
+  const originalEnv = process.env;
+  const cookieFile = resolve(process.cwd(), 'italgiure_cookie.txt');
+
+  beforeEach(() => {
+    process.env = { ...originalEnv };
+    delete process.env.ITALGIURE_COOKIE;
+  });
+
+  afterEach(() => {
+    process.env = originalEnv;
+  });
+
+  it.skipIf(existsSync(cookieFile))('searchItalgiure senza cookie non dichiara il blocco per IP', async () => {
+    const r = await searchItalgiure({ query: 'responsabilita medica' });
+    expect(r.success).toBe(false);
+    if (r.success) throw new Error('atteso fallimento');
+    expect(r.fallback.istruzioni).not.toContain('datacenter');
+    expect(r.fallback.istruzioni).toContain('Network');
+  });
+
+  it.skipIf(existsSync(cookieFile))('getSentenzaItalgiure senza cookie non dichiara il blocco per IP', async () => {
+    const r = await getSentenzaItalgiure('snciv2024332127S');
+    expect(r.success).toBe(false);
+    if (r.success || r.cookieValido) throw new Error('atteso il fallback senza cookie');
+    expect(r.fallback.istruzioni).not.toContain('datacenter');
+    expect(r.fallback.istruzioni).toContain('Network');
   });
 });

@@ -8,24 +8,27 @@ const ITALGIURE_BASE = 'https://www.italgiure.giustizia.it/sncass';
 export const SOLR_ENDPOINT = `${ITALGIURE_BASE}/isapi/hc.dll/sn.solr/sn-collection/select?app.query`;
 
 /**
- * Diagnosi del blocco per IP.
+ * Diagnosi del fallimento di trasporto.
  *
  * Misurato dal container di produzione: www.italgiure.giustizia.it scarta a
  * livello TCP le connessioni provenienti dall'IP del datacenter che ospita
- * questo server, con o senza cookie di sessione. Non è un problema di cookie
- * mancante né di cookie scaduto: è il punto di partenza della connessione.
+ * questo server, con o senza cookie di sessione. Il messaggio è però limitato
+ * a ciò che è stato osservato: la connessione non ha raggiunto il servizio.
+ * Il blocco per IP è il caso noto e misurato del deployment su datacenter, non
+ * una diagnosi valida per qualsiasi host (su una postazione locale il fallimento
+ * può essere anche un servizio momentaneamente indisponibile).
  *
  * Il canale supportato per la ricerca Cassazione è lato client (skill
  * italgiure-search del plugin BetterCallClaude), che interroga lo stesso
  * indice dall'IP dell'utente.
  */
 export const ITALGIURE_BLOCKED_MESSAGE =
-  'Il server non riesce a raggiungere ItalGiure: le richieste provenienti dal ' +
-  'datacenter che ospita questo servizio vengono scartate a livello di rete ' +
-  '(timeout di connessione), indipendentemente dalla presenza di un cookie. ' +
-  'Non è un problema di cookie mancante o scaduto. ' +
-  'Usa la ricerca lato client (skill italgiure-search del plugin ' +
-  'BetterCallClaude Italia), che interroga lo stesso indice pubblico ' +
+  'La connessione a ItalGiure non ha raggiunto il servizio (timeout a livello di rete, ' +
+  'osservato ora). Le cause possibili sono il blocco per IP (il caso noto e misurato del ' +
+  'deployment su IP datacenter, dove lo scarto avviene prima che la richiesta raggiunga il ' +
+  'servizio e il cookie non cambia l\'esito) oppure l\'indisponibilità del servizio. ' +
+  'Il canale supportato per la ricerca Cassazione è lato client (skill italgiure-search ' +
+  'del plugin BetterCallClaude Italia), che interroga lo stesso indice pubblico ' +
   'SentenzeWeb dall\'IP del computer dell\'utente.';
 
 /**
@@ -47,6 +50,57 @@ export const ITALGIURE_COOKIE_PROCEDURE =
   'una stringa vuota e l\'API JavaScript dei cookie non li espone. ' +
   'Passa il valore al server tramite la variabile ITALGIURE_COOKIE o il ' +
   'parametro cookie dell\'API MCP.';
+
+/**
+ * Messaggio del ramo "nessun cookie configurato".
+ *
+ * In questo ramo non viene inviata alcuna richiesta: qui non si può dire che
+ * c'è stato un timeout o un blocco per IP, solo che la ricerca non è eseguibile
+ * e come rimediare.
+ */
+export const ITALGIURE_MISSING_COOKIE_MESSAGE =
+  'Senza un cookie di sessione ItalGiure la ricerca non è eseguibile: nessuna richiesta ' +
+  'è stata inviata al servizio. Se il cookie è valido e la ricerca continua a restituire ' +
+  'zero risultati, il canale supportato per la Cassazione è lato client (skill ' +
+  'italgiure-search del plugin BetterCallClaude Italia), che interroga lo stesso indice ' +
+  'pubblico SentenzeWeb dall\'IP del computer dell\'utente.';
+
+/**
+ * Classificazione di un fallimento del client ItalGiure.
+ *
+ * - 'trasporto': la connessione non ha raggiunto il servizio (timeout o
+ *   indisponibilità). Nel deployment su IP datacenter è il blocco noto; da un
+ *   IP ammesso può essere anche un servizio momentaneamente giù.
+ * - 'cookie': il servizio ha risposto 401/403, cioè la sessione manca o è scaduta.
+ * - 'errore': qualsiasi altro errore (HTTP 5xx, rate limit, errore interno): qui
+ *   non si sa nulla sullo stato della rete, quindi il messaggio non deve
+ *   dichiarare un blocco per IP.
+ */
+export type TipoFallimentoItalgiure = 'trasporto' | 'cookie' | 'errore';
+
+export interface FallimentoItalgiure {
+  tipo: TipoFallimentoItalgiure;
+  messaggio: string;
+}
+
+/**
+ * Classifica un errore del client ItalGiure in base al codice restituito da
+ * parseApiError e al messaggio originale.
+ */
+export function classificaFallimentoItalgiure(code: string, message: string): FallimentoItalgiure {
+  if (code === 'API_ERROR' && (message.includes('401') || message.includes('403'))) {
+    return {
+      tipo: 'cookie',
+      messaggio: `Sessione ItalGiure scaduta o non valida (${message}).`,
+    };
+  }
+
+  if (code === 'API_TIMEOUT' || code === 'API_UNAVAILABLE') {
+    return { tipo: 'trasporto', messaggio: ITALGIURE_BLOCKED_MESSAGE };
+  }
+
+  return { tipo: 'errore', messaggio: `Errore ItalGiure: ${message}.` };
+}
 
 /**
  * Legge il cookie di sessione ItalGiure da parametro, vault sessioni,
@@ -235,7 +289,7 @@ export async function searchItalgiure(input: SearchMassimeInput): Promise<{
         urlEcli,
         urlGoogle: google,
         urlDuckDuckGo: duckduckgo,
-        istruzioni: ITALGIURE_COOKIE_PROCEDURE + ' ' + ITALGIURE_BLOCKED_MESSAGE,
+        istruzioni: ITALGIURE_MISSING_COOKIE_MESSAGE + ' ' + ITALGIURE_COOKIE_PROCEDURE,
       },
     };
   }
@@ -285,31 +339,13 @@ export async function searchItalgiure(input: SearchMassimeInput): Promise<{
     };
   } catch (error) {
     const parsed = parseApiError(error);
-    const isAuthError = parsed.code === 'API_ERROR' && (parsed.message.includes('401') || parsed.message.includes('403'));
+    const fallimento = classificaFallimentoItalgiure(parsed.code, parsed.message);
 
-    if (isAuthError) {
-      return {
-        success: false,
-        cookieValido: false,
-        totale: 0,
-        massime: [],
-        fallback: {
-          urlRicerca,
-          urlItalgiure,
-          urlSentenzeWeb,
-          urlEcli,
-          urlGoogle: google,
-          urlDuckDuckGo: duckduckgo,
-          istruzioni:
-            `Sessione ItalGiure scaduta (${parsed.message}). ` +
-            ITALGIURE_COOKIE_PROCEDURE +
-            ' La ricerca su questo server resta comunque non raggiungibile per il blocco per IP. ' +
-            ITALGIURE_BLOCKED_MESSAGE,
-        },
-      };
-    }
+    const istruzioni =
+      fallimento.tipo === 'cookie'
+        ? fallimento.messaggio + ' ' + ITALGIURE_COOKIE_PROCEDURE
+        : fallimento.messaggio;
 
-    // Per altri errori (rete, timeout) restituiamo comunque i fallback
     return {
       success: false,
       cookieValido: false,
@@ -322,11 +358,7 @@ export async function searchItalgiure(input: SearchMassimeInput): Promise<{
         urlEcli,
         urlGoogle: google,
         urlDuckDuckGo: duckduckgo,
-        istruzioni:
-          `Errore ItalGiure: ${parsed.message}. ` +
-          ITALGIURE_COOKIE_PROCEDURE +
-          ' ' +
-          ITALGIURE_BLOCKED_MESSAGE,
+        istruzioni,
       },
     };
   }
@@ -369,7 +401,7 @@ export async function getSentenzaItalgiure(id: string, paramCookie?: string, ses
       fallback: {
         urlItalgiure: `${ITALGIURE_BASE}/sncass.php`,
         urlSentenzeWeb: 'https://www.italgiure.giustizia.it/sncass/',
-        istruzioni: ITALGIURE_COOKIE_PROCEDURE + ' ' + ITALGIURE_BLOCKED_MESSAGE,
+        istruzioni: ITALGIURE_MISSING_COOKIE_MESSAGE + ' ' + ITALGIURE_COOKIE_PROCEDURE,
       },
     };
   }
@@ -421,7 +453,12 @@ export async function getSentenzaItalgiure(id: string, paramCookie?: string, ses
     };
   } catch (error) {
     const parsed = parseApiError(error);
-    const isAuthError = parsed.code === 'API_ERROR' && (parsed.message.includes('401') || parsed.message.includes('403'));
+    const fallimento = classificaFallimentoItalgiure(parsed.code, parsed.message);
+
+    const istruzioni =
+      fallimento.tipo === 'cookie'
+        ? fallimento.messaggio + ' ' + ITALGIURE_COOKIE_PROCEDURE
+        : fallimento.messaggio;
 
     return {
       success: false,
@@ -429,15 +466,7 @@ export async function getSentenzaItalgiure(id: string, paramCookie?: string, ses
       fallback: {
         urlItalgiure: `${ITALGIURE_BASE}/sncass.php`,
         urlSentenzeWeb: 'https://www.italgiure.giustizia.it/sncass/',
-        istruzioni: isAuthError
-          ? `Sessione ItalGiure scaduta (${parsed.message}). ` +
-            ITALGIURE_COOKIE_PROCEDURE +
-            ' ' +
-            ITALGIURE_BLOCKED_MESSAGE
-          : `Errore nel recupero sentenza: ${parsed.message}. ` +
-            ITALGIURE_COOKIE_PROCEDURE +
-            ' ' +
-            ITALGIURE_BLOCKED_MESSAGE,
+        istruzioni,
       },
     };
   }
