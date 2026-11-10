@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { readFileSync } from 'fs';
+import { readFileSync, existsSync } from 'fs';
 import { resolve } from 'path';
 
 /**
@@ -32,6 +32,17 @@ describe('descrizione del tool citation-verify-ita_check_existence', () => {
     expect(descrizione).toContain('non ha raggiunto il servizio');
   });
 
+  it('non conta i casi in modo chiuso: il runtime ne produce altri', () => {
+    expect(descrizione).not.toContain('in due casi distinti');
+    expect(descrizione).toContain('in casi distinti');
+  });
+
+  it('distingue il caso in cui il servizio ha risposto e riporta lo status', () => {
+    expect(descrizione).toContain('risposta del servizio');
+    expect(descrizione).toContain('401/403');
+    expect(descrizione).toContain('500/429/404');
+  });
+
   it('promette ancora l\'errore SOURCE_UNAVAILABLE senza inventare contenuto', () => {
     expect(descrizione).toContain('SOURCE_UNAVAILABLE');
     expect(descrizione).toContain('senza inventare contenuto');
@@ -55,5 +66,15 @@ describe('README del pacchetto citation-verify-ita', () => {
 
   it('distingue il caso in cui la fonte è stata interrogata e non è raggiungibile', () => {
     expect(readme).toContain('Fonte interrogata e non raggiungibile');
+  });
+
+  it('non rimanda a un documento inesistente', () => {
+    expect(readme).not.toContain('05-CASSAZIONE-ITALGIURE.md');
+  });
+
+  it('i collegamenti ai documenti del repository puntano a file esistenti', () => {
+    for (const [, target] of readme.matchAll(/\]\((\.\.\/[^)]+)\)/g)) {
+      expect(existsSync(resolve(__dirname, '..', '..', target))).toBe(true);
+    }
   });
 });

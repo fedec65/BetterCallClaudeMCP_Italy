@@ -68,6 +68,20 @@ export const ITALGIURE_MISSING_COOKIE_MESSAGE =
   'pubblico SentenzeWeb dall\'IP del computer dell\'utente.';
 
 /**
+ * Canale supportato per la ricerca Cassazione.
+ *
+ * Vale per i rami in cui il servizio ha risposto e non ha accettato la
+ * richiesta: un 403 non distingue una sessione non valida da un rifiuto per
+ * policy o per IP, quindi in quel caso il rimedio non è solo rinnovare il
+ * cookie, ma interrogare lo stesso indice pubblico dall'IP del computer
+ * dell'utente.
+ */
+const ITALGIURE_CLIENT_CHANNEL =
+  'Il canale supportato per la ricerca Cassazione è lato client (skill ' +
+  'italgiure-search del plugin BetterCallClaude Italia), che interroga lo stesso ' +
+  'indice pubblico SentenzeWeb dall\'IP del computer dell\'utente.';
+
+/**
  * Classificazione di un fallimento del client ItalGiure.
  *
  * - 'trasporto': la connessione non ha raggiunto il servizio (timeout o
@@ -142,10 +156,15 @@ export function classificaFallimentoItalgiure(
       status === 403
         ? ' Un 403 non distingue una sessione non valida da un rifiuto per policy o per IP.'
         : '';
+    // Sul 401 il rimedio è rinnovare il cookie (la procedura viene allegata
+    // dal chiamante). Negli altri casi il servizio ha risposto senza
+    // accettare la sessione: se il rifiuto è per IP o per policy, l'unico
+    // canale che funziona è quello lato client.
+    const rimedioLatoClient = status === 401 ? '' : ` ${ITALGIURE_CLIENT_CHANNEL}`;
 
     return {
       tipo: 'cookie',
-      messaggio: `${descrizioneSessione}${dettaglioStatus} (${testo}).${nota403}`,
+      messaggio: `${descrizioneSessione}${dettaglioStatus} (${testo}).${nota403}${rimedioLatoClient}`,
     };
   }
 

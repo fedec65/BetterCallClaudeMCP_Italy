@@ -111,6 +111,14 @@ describe('cablaggio degli errori in searchItalgiure', () => {
     expect(istruzioni).not.toContain('datacenter');
     expect(istruzioni).not.toContain('non ha raggiunto il servizio');
   });
+
+  it('un 403 rimanda al canale lato client e mantiene la procedura di rinnovo', async () => {
+    const istruzioni = await cercaConErrore(erroreConRisposta(403));
+
+    expect(istruzioni).toContain('HTTP 403');
+    expect(istruzioni).toContain('italgiure-search');
+    expect(istruzioni).toContain('ITALGIURE_COOKIE');
+  });
 });
 
 describe('cablaggio degli errori in getSentenzaItalgiure', () => {

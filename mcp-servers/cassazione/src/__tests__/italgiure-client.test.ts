@@ -250,6 +250,17 @@ describe('classificaFallimentoItalgiure', () => {
     expect(r.messaggio).not.toContain('datacenter');
   });
 
+  it('sul 403 rimanda al canale lato client, che è il rimedio di un rifiuto per IP', () => {
+    const r = classificaFallimentoItalgiure('API_ERROR', 'Request failed with status code 403', 403);
+    expect(r.messaggio).toContain('italgiure-search');
+    expect(r.messaggio).toContain('SentenzeWeb');
+  });
+
+  it('sul 401 il rimedio resta il rinnovo del cookie', () => {
+    const r = classificaFallimentoItalgiure('API_ERROR', 'Request failed with status code 401', 401);
+    expect(r.messaggio).not.toContain('italgiure-search');
+  });
+
   it('non duplica il punto finale nel ramo con status HTTP definito', () => {
     const r = classificaFallimentoItalgiure(
       'RATE_LIMIT_EXCEEDED',

@@ -32,4 +32,11 @@ describe('CHANGELOG — voce sul server cassazione', () => {
     expect(sezioneUnreleased).toContain('procedura di rinnovo');
     expect(sezioneUnreleased).toContain('status HTTP');
   });
+
+  it('non etichetta il ramo 401/403 come "cookie scaduto"', () => {
+    // Il 403 non dichiara la scadenza della sessione: il CHANGELOG non può
+    // farlo.
+    expect(sezioneUnreleased).not.toContain('per il cookie scaduto');
+    expect(sezioneUnreleased).toContain('sessione rifiutata dal servizio');
+  });
 });

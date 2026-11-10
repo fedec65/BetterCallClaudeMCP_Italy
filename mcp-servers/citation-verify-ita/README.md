@@ -47,7 +47,7 @@ Verifica che una citazione giuridica esista interrogando le fonti ufficiali.
 - Citazione non riconosciuta → `exists: false, fonte: null` con nota esplicativa.
 - Cookie ItalGiure mancante → la richiesta non viene inviata a ItalGiure: la fonte non è stata interrogata → errore `SOURCE_UNAVAILABLE`.
 - Fonte interrogata e non raggiungibile (connessione non riuscita, Normattiva down) → errore `SOURCE_UNAVAILABLE`. Il tool **non inventa mai contenuto**.
-- Per le sentenze Cassazione serve il cookie ItalGiure: vedi [docs/05-CASSAZIONE-ITALGIURE.md](../../docs/05-CASSAZIONE-ITALGIURE.md).
+- Per le sentenze Cassazione serve il cookie ItalGiure: la procedura è nel [README del repository](../../README.md), sezione «Cassazione — Setup cookie ItalGiure».
 
 ## Affidabilità fonti
 
