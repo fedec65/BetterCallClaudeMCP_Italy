@@ -128,9 +128,24 @@ export function classificaFallimentoItalgiure(
   const testo = message.replace(/\.+\s*$/, '');
 
   if (cookieDaStatus || cookieDaMessaggio) {
+    // Il messaggio dichiara solo ciò che è stato osservato: il servizio ha
+    // risposto e non ha accettato la sessione. Un 401 dice che la sessione
+    // manca o è scaduta; un 403 non distingue una sessione non valida da un
+    // rifiuto per policy o per IP, quindi non viene dichiarata scaduta.
+    const descrizioneSessione =
+      status === 401
+        ? 'Sessione ItalGiure mancante o scaduta'
+        : 'Sessione ItalGiure non accettata dal servizio';
+    const dettaglioStatus =
+      status !== undefined ? `: il servizio ha risposto con HTTP ${status}` : '';
+    const nota403 =
+      status === 403
+        ? ' Un 403 non distingue una sessione non valida da un rifiuto per policy o per IP.'
+        : '';
+
     return {
       tipo: 'cookie',
-      messaggio: `Sessione ItalGiure scaduta o non valida (${testo}).`,
+      messaggio: `${descrizioneSessione}${dettaglioStatus} (${testo}).${nota403}`,
     };
   }
 
@@ -482,7 +497,10 @@ export async function getSentenzaItalgiure(id: string, paramCookie?: string, ses
       return {
         success: false,
         cookieValido: true,
-        messaggio: `Sentenza ${id} non trovata in ItalGiure. Prova SentenzeWeb (https://www.italgiure.giustizia.it/sncass/) o verifica l'identificativo.`,
+        messaggio:
+          `Sentenza ${id} non trovata in ItalGiure. Verifica dall'area riservata o ` +
+          `dall'indice pubblico SentenzeWeb (https://www.italgiure.giustizia.it/sncass/), ` +
+          `raggiungibile dal browser del computer dell'utente, oppure controlla l'identificativo.`,
       };
     }
 

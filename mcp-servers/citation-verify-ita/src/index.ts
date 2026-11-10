@@ -29,7 +29,9 @@ Parametri:
 
 IMPORTANTE: questo tool verifica solo l'ESISTENZA della fonte, non se il contenuto supporta una specifica affermazione (implicazione). La verifica di implicazione resta responsabilità del client/LLM.
 
-Se la fonte non è raggiungibile (es. cookie ItalGiure mancante), il tool fallisce con errore SOURCE_UNAVAILABLE senza inventare contenuto.`,
+Il tool fallisce con errore SOURCE_UNAVAILABLE, senza inventare contenuto, in due casi distinti:
+- mancanza del cookie: senza cookie di sessione ItalGiure la richiesta non viene inviata a ItalGiure, e il messaggio dice che la verifica non è eseguibile per mancanza del cookie;
+- fonte non raggiungibile: quando la connessione non ha raggiunto il servizio, il messaggio riporta la diagnosi del fallimento (per esempio il blocco per IP del datacenter).`,
     inputSchema: {
       type: 'object',
       properties: {

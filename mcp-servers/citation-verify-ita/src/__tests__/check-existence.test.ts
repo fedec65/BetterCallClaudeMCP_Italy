@@ -1,4 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
+import { readFileSync } from 'fs';
+import { resolve } from 'path';
 import { checkExistence, normalizeCitazione } from '../tools/check-existence.js';
 
 // Mock delle fonti dati (nessuna rete nei test)
@@ -10,10 +12,21 @@ vi.mock('@bettercallclaude-italia/normattiva/search-advanced', () => ({
 }));
 
 import { searchItalgiure } from '@bettercallclaude-italia/cassazione/italgiure-client';
+import * as italgiureClient from '@bettercallclaude-italia/cassazione/italgiure-client';
 import { searchNormattivaAdvanced } from '@bettercallclaude-italia/normattiva/search-advanced';
 
 const mockedSearchItalgiure = vi.mocked(searchItalgiure);
 const mockedSearchNormattiva = vi.mocked(searchNormattivaAdvanced);
+
+/**
+ * La copia di ITALGIURE_BLOCKED_MESSAGE eliminata dal mock in un intervento
+ * precedente non deve reintrodursi: la diagnosi del fallimento arriva da
+ * `fallback.istruzioni`, costruito dal server cassazione con il ramo giusto.
+ */
+const sorgenteCheckExistence = readFileSync(
+  resolve(__dirname, '..', 'tools', 'check-existence.ts'),
+  'utf8'
+);
 
 describe('normalizeCitazione', () => {
   it('parses Cassazione with n. numero/anno', () => {
@@ -257,5 +270,15 @@ describe('checkExistence', () => {
     expect(r.fonte).toBe('normattiva');
     expect(r.riferimento_normalizzato?.articolo).toBe('24');
     expect(mockedSearchNormattiva).not.toHaveBeenCalled();
+  });
+});
+
+describe('mock delle fonti dati', () => {
+  it('espone solo searchItalgiure: nessuna copia della costante del blocco per IP', () => {
+    expect(Object.keys(italgiureClient)).toEqual(['searchItalgiure']);
+  });
+
+  it('il tool non reimporta la costante del blocco per IP', () => {
+    expect(sorgenteCheckExistence).not.toContain('ITALGIURE_BLOCKED_MESSAGE');
   });
 });

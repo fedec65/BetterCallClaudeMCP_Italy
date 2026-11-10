@@ -62,6 +62,23 @@ describe('README — cosa succede senza cookie', () => {
     expect(paragrafoSenzaCookie).toContain('urlEcli');
     expect(paragrafoSenzaCookie).toContain('è presente solo');
   });
+
+  it('descrive l\'envelope reale: la chiamata MCP riesce e il fallimento è dentro data', () => {
+    expect(paragrafoSenzaCookie).toContain('success: true');
+    expect(paragrafoSenzaCookie).toContain('data.autenticazione.cookieValido');
+    expect(paragrafoSenzaCookie).toContain('data.autenticazione.messaggio');
+    expect(paragrafoSenzaCookie).toContain('data.fallback');
+  });
+
+  it('non chiede di controllare success (o resp.success) per riconoscere il caso', () => {
+    expect(paragrafoSenzaCookie).not.toContain('success: false');
+    expect(paragrafoSenzaCookie).not.toContain('resp.success');
+  });
+
+  it('distingue la forma dei due tool: totale 0 in cassazione_search_massime, nessun totale in cassazione_get_sentenza', () => {
+    expect(paragrafoSenzaCookie).toContain('data.totale');
+    expect(paragrafoSenzaCookie).toMatch(/cassazione_get_sentenza[\s\S]*non ha il campo `totale`/);
+  });
 });
 
 describe('README — copertura dell\'indice pubblico', () => {

@@ -225,7 +225,29 @@ describe('classificaFallimentoItalgiure', () => {
 
   it('non duplica il punto finale nel ramo 401/403', () => {
     const r = classificaFallimentoItalgiure('API_ERROR', 'Sessione scaduta.', 401);
-    expect(r.messaggio).toBe('Sessione ItalGiure scaduta o non valida (Sessione scaduta).');
+    expect(r.messaggio).toBe(
+      'Sessione ItalGiure mancante o scaduta: il servizio ha risposto con HTTP 401 (Sessione scaduta).'
+    );
+  });
+
+  it('sul 401 dichiara lo status HTTP ricevuto dal servizio', () => {
+    const r = classificaFallimentoItalgiure('API_ERROR', 'Request failed with status code 401', 401);
+    expect(r.messaggio).toContain('HTTP 401');
+    expect(r.messaggio).toContain('Request failed with status code 401');
+  });
+
+  it('sul 403 dichiara che la sessione non è stata accettata, senza dichiararla scaduta', () => {
+    const r = classificaFallimentoItalgiure('API_ERROR', 'Request failed with status code 403', 403);
+    expect(r.messaggio).toContain('non accettata');
+    expect(r.messaggio).toContain('HTTP 403');
+    // Un 403 non prova che la sessione sia scaduta: può essere anche un
+    // rifiuto per policy o per IP.
+    expect(r.messaggio).not.toContain('scaduta');
+  });
+
+  it('sul 403 non dichiara un blocco per IP', () => {
+    const r = classificaFallimentoItalgiure('API_ERROR', 'Request failed with status code 403', 403);
+    expect(r.messaggio).not.toContain('datacenter');
   });
 
   it('non duplica il punto finale nel ramo con status HTTP definito', () => {
