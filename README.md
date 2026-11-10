@@ -39,7 +39,9 @@ Il server `cassazione` interroga l'API Solr di [ItalGiure](https://www.italgiure
 
 #### Cosa succede senza cookie
 
-Senza cookie configurato la ricerca **non viene eseguita**: il tool risponde subito con `success: false`, `cookieValido: false`, `totale: 0` e i link di fallback per la consultazione manuale (SentenzeWeb, ECLI, Google, DuckDuckGo). Nessuna richiesta viene inviata a ItalGiure, quindi il messaggio non attribuisce la mancata risposta a un blocco per IP.
+Senza cookie configurato la ricerca **non viene eseguita**: `cassazione_search_massime` risponde subito con `success: false`, `cookieValido: false`, `totale: 0` e i link di fallback per la consultazione manuale (SentenzeWeb, ECLI, Google, DuckDuckGo). Il link ECLI (`urlEcli`) è presente solo quando la query ricava anno e numero della sentenza. `cassazione_get_sentenza` risponde con `success: false`, `cookieValido: false` e i soli link `urlItalgiure` e `urlSentenzeWeb`, senza `totale`. Nessuna richiesta viene inviata a ItalGiure, quindi il messaggio non attribuisce la mancata risposta a un blocco per IP.
+
+L'indice pubblico SentenzeWeb è gratuito e copre le sentenze pubblicate dal 2012 in poi, mentre le massime complete e le sentenze precedenti al 2012 richiedono autenticazione: la skill `italgiure-search` del plugin interroga lo stesso indice pubblico dall'IP dell'utente, quindi ha la stessa copertura.
 
 #### Come ottenere e configurare il cookie
 

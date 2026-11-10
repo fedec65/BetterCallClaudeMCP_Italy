@@ -21,11 +21,11 @@ const tools: Tool[] = [
 ⚠️ LIMITE DI RAGGIUNGIBILITÀ: questo server gira su un indirizzo IP di datacenter e
 www.italgiure.giustizia.it scarta a livello di rete (timeout di connessione) le
 richieste che arrivano da quel tipo di indirizzo, con o senza cookie. Di conseguenza
-questa ricerca dal server tende a restituire zero risultati. Il canale supportato per
-la ricerca Cassazione è lato CLIENT: la skill italgiure-search del plugin
-BetterCallClaude Italia interroga lo stesso indice pubblico SentenzeWeb direttamente
-dal computer dell'utente, dove l'IP è ammesso, e restituisce la stessa forma di
-questo tool.
+questa ricerca dal server tende a fallire, non a restituire un elenco vuoto: il tool
+segnala il fallimento e ne riporta la causa. Il canale supportato per la ricerca
+Cassazione è lato CLIENT: la skill italgiure-search del plugin BetterCallClaude Italia
+interroga lo stesso indice pubblico SentenzeWeb direttamente dal computer dell'utente,
+dove l'IP è ammesso, e restituisce la stessa forma di questo tool.
 
 Parametri:
 - query (obbligatorio): parole chiave o sintassi Solr (es. "responsabilità medica")
@@ -38,8 +38,9 @@ Parametri:
 - session_key (opzionale): chiave di una sessione registrata via cassazione_session_set — il cookie viene letto dal vault lato server, senza passarlo a ogni chiamata
 
 Se la ricerca non è eseguibile (per esempio perché manca il cookie di sessione), il campo
-autenticazione.messaggio spiega il motivo e indica il percorso alternativo. Una ricerca
-eseguita che non trova nulla restituisce totale 0 e autenticazione.cookieValido true.`,
+autenticazione.messaggio spiega il motivo del fallimento e il percorso alternativo è
+indicato nel campo fallback. Una ricerca eseguita che non trova nulla
+restituisce totale 0 e autenticazione.cookieValido true.`,
     inputSchema: {
       type: 'object',
       properties: {

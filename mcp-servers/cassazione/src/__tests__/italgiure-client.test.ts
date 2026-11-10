@@ -222,6 +222,33 @@ describe('classificaFallimentoItalgiure', () => {
     const r = classificaFallimentoItalgiure('INTERNAL_ERROR', 'Errore sconosciuto');
     expect(r.messaggio).toBe('Errore ItalGiure: Errore sconosciuto.');
   });
+
+  it('non duplica il punto finale nel ramo 401/403', () => {
+    const r = classificaFallimentoItalgiure('API_ERROR', 'Sessione scaduta.', 401);
+    expect(r.messaggio).toBe('Sessione ItalGiure scaduta o non valida (Sessione scaduta).');
+  });
+
+  it('non duplica il punto finale nel ramo con status HTTP definito', () => {
+    const r = classificaFallimentoItalgiure(
+      'RATE_LIMIT_EXCEEDED',
+      'Limite di richieste superato. Riprova più tardi.',
+      429
+    );
+    expect(r.messaggio).toBe(
+      'Errore ItalGiure: il servizio ha risposto con HTTP 429 (Limite di richieste superato. Riprova più tardi).'
+    );
+  });
+
+  it('non duplica il punto finale nel ramo con timeout e status HTTP definito', () => {
+    const r = classificaFallimentoItalgiure(
+      'API_TIMEOUT',
+      'Timeout nella richiesta all\'API. Riprova.',
+      408
+    );
+    expect(r.messaggio).toBe(
+      'Errore ItalGiure: il servizio ha risposto con HTTP 408 (Timeout nella richiesta all\'API. Riprova).'
+    );
+  });
 });
 
 describe('statusHttpErrore', () => {

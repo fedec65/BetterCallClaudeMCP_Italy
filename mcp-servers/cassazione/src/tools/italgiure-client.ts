@@ -106,6 +106,11 @@ export function statusHttpErrore(error: unknown): number | undefined {
  * Lo status distingue "il servizio ha risposto con un errore" da "la
  * connessione non ha raggiunto il servizio": senza risposta HTTP non si può
  * attribuire al blocco per IP un timeout che forse non c'è stato.
+ *
+ * Il ramo che deduce il problema di cookie dal solo messaggio
+ * (`cookieDaMessaggio`) è oggi irraggiungibile dai chiamanti del modulo, che
+ * passano sempre lo status HTTP reale: resta per compatibilità, se
+ * `parseApiError` cambiasse forma.
  */
 export function classificaFallimentoItalgiure(
   code: string,
@@ -118,17 +123,21 @@ export function classificaFallimentoItalgiure(
     code === 'API_ERROR' &&
     (message.includes('401') || message.includes('403'));
 
+  // Il messaggio originale può già terminare con un punto: si toglie il punto
+  // finale per non accumulare punteggiatura quando il ramo aggiunge il proprio.
+  const testo = message.replace(/\.+\s*$/, '');
+
   if (cookieDaStatus || cookieDaMessaggio) {
     return {
       tipo: 'cookie',
-      messaggio: `Sessione ItalGiure scaduta o non valida (${message}).`,
+      messaggio: `Sessione ItalGiure scaduta o non valida (${testo}).`,
     };
   }
 
   if (status !== undefined) {
     return {
       tipo: 'errore',
-      messaggio: `Errore ItalGiure: il servizio ha risposto con HTTP ${status} (${message}).`,
+      messaggio: `Errore ItalGiure: il servizio ha risposto con HTTP ${status} (${testo}).`,
     };
   }
 
@@ -136,7 +145,6 @@ export function classificaFallimentoItalgiure(
     return { tipo: 'trasporto', messaggio: ITALGIURE_BLOCKED_MESSAGE };
   }
 
-  const testo = message.replace(/\.+\s*$/, '');
   return { tipo: 'errore', messaggio: `Errore ItalGiure: ${testo}.` };
 }
 

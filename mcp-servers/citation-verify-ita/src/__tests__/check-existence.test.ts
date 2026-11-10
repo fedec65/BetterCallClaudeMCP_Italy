@@ -137,6 +137,10 @@ describe('checkExistence', () => {
     // La diagnosi compare una sola volta: il messaggio non la ripete.
     expect(err.message.split(diagnosi).length - 1).toBe(1);
     expect(err.message).not.toContain('Dettaglio:');
+    // Se il messaggio reimportasse una costante rimossa dal mock, il valore
+    // sarebbe undefined e il letterale "undefined" arriverebbe all'utente:
+    // il conteggio della diagnosi non lo mostrerebbe.
+    expect(err.message).not.toContain('undefined');
   });
 
   it('per una sentenza con fonte irraggiungibile non promette SentenzeWeb come alternativa', async () => {
