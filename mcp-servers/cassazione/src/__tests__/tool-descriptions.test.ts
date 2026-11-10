@@ -26,4 +26,12 @@ describe('descrizioni dei tool cassazione', () => {
   it('rimanda al canale client-side', () => {
     expect(indexSrc).toContain('italgiure-search');
   });
+
+  it('non promette un messaggio quando la ricerca non restituisce risultati', () => {
+    expect(indexSrc).not.toContain('Se la ricerca non restituisce risultati');
+  });
+
+  it('promette il messaggio quando la ricerca non è eseguibile', () => {
+    expect(indexSrc).toContain('non è eseguibile');
+  });
 });

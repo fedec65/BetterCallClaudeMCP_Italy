@@ -37,8 +37,9 @@ Parametri:
 - cookie (opzionale): cookie di sessione ItalGiure
 - session_key (opzionale): chiave di una sessione registrata via cassazione_session_set — il cookie viene letto dal vault lato server, senza passarlo a ogni chiamata
 
-Se la ricerca non restituisce risultati, il campo autenticazione.messaggio spiega il
-motivo e indica il percorso alternativo.`,
+Se la ricerca non è eseguibile (per esempio perché manca il cookie di sessione), il campo
+autenticazione.messaggio spiega il motivo e indica il percorso alternativo. Una ricerca
+eseguita che non trova nulla restituisce totale 0 e autenticazione.cookieValido true.`,
     inputSchema: {
       type: 'object',
       properties: {
