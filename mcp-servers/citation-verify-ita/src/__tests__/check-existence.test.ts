@@ -1,30 +1,32 @@
 import { describe, it, expect, vi } from 'vitest';
+import { readFileSync } from 'fs';
+import { resolve } from 'path';
 import { checkExistence, normalizeCitazione } from '../tools/check-existence.js';
 
 // Mock delle fonti dati (nessuna rete nei test)
 vi.mock('@bettercallclaude-italia/cassazione/italgiure-client', () => ({
   searchItalgiure: vi.fn(),
-  // Testo fedele della costante esportata dal pacchetto cassazione (B1): il
-  // modulo è sostituito interamente dal mock, quindi la costante va ridefinita
-  // qui o sarebbe undefined nel messaggio emesso dal tool.
-  ITALGIURE_BLOCKED_MESSAGE:
-    'Il server non riesce a raggiungere ItalGiure: le richieste provenienti dal ' +
-    'datacenter che ospita questo servizio vengono scartate a livello di rete ' +
-    '(timeout di connessione), indipendentemente dalla presenza di un cookie. ' +
-    'Non è un problema di cookie mancante o scaduto. ' +
-    'Usa la ricerca lato client (skill italgiure-search del plugin ' +
-    'BetterCallClaude Italia), che interroga lo stesso indice pubblico ' +
-    'SentenzeWeb dall\'IP del computer dell\'utente.',
 }));
 vi.mock('@bettercallclaude-italia/normattiva/search-advanced', () => ({
   searchNormattivaAdvanced: vi.fn(),
 }));
 
 import { searchItalgiure } from '@bettercallclaude-italia/cassazione/italgiure-client';
+import * as italgiureClient from '@bettercallclaude-italia/cassazione/italgiure-client';
 import { searchNormattivaAdvanced } from '@bettercallclaude-italia/normattiva/search-advanced';
 
 const mockedSearchItalgiure = vi.mocked(searchItalgiure);
 const mockedSearchNormattiva = vi.mocked(searchNormattivaAdvanced);
+
+/**
+ * La copia di ITALGIURE_BLOCKED_MESSAGE eliminata dal mock in un intervento
+ * precedente non deve reintrodursi: la diagnosi del fallimento arriva da
+ * `fallback.istruzioni`, costruito dal server cassazione con il ramo giusto.
+ */
+const sorgenteCheckExistence = readFileSync(
+  resolve(__dirname, '..', 'tools', 'check-existence.ts'),
+  'utf8'
+);
 
 describe('normalizeCitazione', () => {
   it('parses Cassazione with n. numero/anno', () => {
@@ -118,7 +120,10 @@ describe('checkExistence', () => {
       .rejects.toThrow('SOURCE_UNAVAILABLE');
   });
 
-  it('per una sentenza con fonte irraggiungibile spiega il blocco per IP', async () => {
+  it('per una sentenza con fonte irraggiungibile riporta le istruzioni senza duplicare la diagnosi', async () => {
+    const diagnosi =
+      'La connessione a ItalGiure non ha raggiunto il servizio (timeout o connessione non riuscita a livello di rete, osservato ora).';
+    const istruzioni = `${diagnosi} Per ottenere il cookie di sessione: area riservata, scheda Network.`;
     mockedSearchItalgiure.mockResolvedValue({
       success: false,
       cookieValido: false,
@@ -130,19 +135,25 @@ describe('checkExistence', () => {
         urlSentenzeWeb: 'https://example.invalid',
         urlGoogle: 'https://example.invalid',
         urlDuckDuckGo: 'https://example.invalid',
-        istruzioni: 'Errore ItalGiure: timeout.',
+        istruzioni,
       },
     });
 
-    await expect(checkExistence({ citazione: 'Cass. n. 12345/2024' })).rejects.toThrow(
-      /SOURCE_UNAVAILABLE/
+    const err = await checkExistence({ citazione: 'Cass. n. 12345/2024' }).then(
+      () => {
+        throw new Error('la verifica della sentenza doveva fallire');
+      },
+      (e: unknown) => e as Error
     );
-    await expect(checkExistence({ citazione: 'Cass. n. 12345/2024' })).rejects.toThrow(
-      /datacenter/
-    );
-    await expect(checkExistence({ citazione: 'Cass. n. 12345/2024' })).rejects.toThrow(
-      /italgiure-search/
-    );
+    expect(err.message.startsWith('SOURCE_UNAVAILABLE:')).toBe(true);
+    expect(err.message.endsWith(istruzioni)).toBe(true);
+    // La diagnosi compare una sola volta: il messaggio non la ripete.
+    expect(err.message.split(diagnosi).length - 1).toBe(1);
+    expect(err.message).not.toContain('Dettaglio:');
+    // Se il messaggio reimportasse una costante rimossa dal mock, il valore
+    // sarebbe undefined e il letterale "undefined" arriverebbe all'utente:
+    // il conteggio della diagnosi non lo mostrerebbe.
+    expect(err.message).not.toContain('undefined');
   });
 
   it('per una sentenza con fonte irraggiungibile non promette SentenzeWeb come alternativa', async () => {
@@ -259,5 +270,15 @@ describe('checkExistence', () => {
     expect(r.fonte).toBe('normattiva');
     expect(r.riferimento_normalizzato?.articolo).toBe('24');
     expect(mockedSearchNormattiva).not.toHaveBeenCalled();
+  });
+});
+
+describe('mock delle fonti dati', () => {
+  it('espone solo searchItalgiure: nessuna copia della costante del blocco per IP', () => {
+    expect(Object.keys(italgiureClient)).toEqual(['searchItalgiure']);
+  });
+
+  it('il tool non reimporta la costante del blocco per IP', () => {
+    expect(sorgenteCheckExistence).not.toContain('ITALGIURE_BLOCKED_MESSAGE');
   });
 });
